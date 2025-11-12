@@ -96,88 +96,89 @@ button.ghost{background:transparent;border:1px solid #e6eef3;padding:10px 14px;b
 <script>
 // Prices
 const PRICES = {
-  assessment: 45,
-  sockets: 30,
-  lighting: 30,
-  rewire: 420,
-  fuse: 650,
-  ev: 1200,
-  inspection: 85,
-  custom: 0
-};
-const serviceNames = {
-  assessment: 'Assessment / Callout',
-  sockets: 'Socket replacement / installation',
-  lighting: 'Light fitting or replacement',
-  rewire: 'Partial rewire (per room)',
-  fuse: 'Fuseboard / consumer unit',
-  ev: 'EV charger (supply & fit)',
-  inspection: 'Inspection & certificate',
-  custom: 'Custom'
+  general: {label:'Assessment / Callout', unit:45},
+  sockets: {label:'Socket (single)', unit:30},
+  lighting: {label:'Light fitting', unit:30},
+  rewire: {label:'Partial rewire (per room)', unit:420},
+  fuse: {label:'Fuseboard upgrade', unit:650},
+  ev: {label:'EV charger (supply & fit)', unit:1200},
+  inspection: {label:'Inspection & certificate', unit:85},
+  custom: {label:'Custom item', unit:0}
 };
 
-// State
-let quote = [];
-
-// Elements
+// DOM
 const serviceSelect = document.getElementById('serviceSelect');
-const qtyInput = document.getElementById('qtyInput');
-const addServiceBtn = document.getElementById('addServiceBtn');
-const quoteList = document.getElementById('quoteList');
-const totalAmount = document.getElementById('totalAmount');
-const breakdown = document.getElementById('breakdown');
-const customInputContainer = document.getElementById('customInputContainer');
+const dynamicOptions = document.getElementById('dynamicOptions');
+const qtyInput = document.getElementById('qty');
+const addServiceBtn = document.createElement('button');
+addServiceBtn.textContent = 'Add to quote';
+addServiceBtn.className = 'primary';
+dynamicOptions.appendChild(addServiceBtn);
 
-// Custom service input
-serviceSelect.addEventListener('change', () => {
-  if(serviceSelect.value === 'custom'){
-    customInputContainer.innerHTML = '<input id="customTitle" placeholder="Custom service title">';
-  }else{
-    customInputContainer.innerHTML = '';
+const quoteList = []; // array of added services
+
+function renderDynamicOptions() {
+  const s = serviceSelect.value;
+  dynamicOptions.innerHTML = '';
+  let html = '';
+  if (s === 'custom') {
+    html += `<label>Custom item title</label><input id='customTitle' placeholder='e.g. install new consumer unit'>`;
+    html += `<label style='margin-top:10px'>Estimated units / qty</label><input id='customQty' type='number' min='1' value='1'>`;
+  } else {
+    html += `<label>Quantity</label><input id='qty' type='number' min='1' value='1'>`;
   }
-});
+  const priceLabel = PRICES[s] ? PRICES[s].unit : 0;
+  const fromText = (s==='rewire'||s==='fuse'||s==='ev')?'from ':'';
+  html += `<div class="muted" style="margin-top:8px">Unit price: ${fromText}€${priceLabel} (${PRICES[s]?PRICES[s].label:''})</div>`;
+  dynamicOptions.innerHTML = html;
+  dynamicOptions.appendChild(addServiceBtn);
+
+  if(s !== 'custom'){
+    document.getElementById('qty').addEventListener('input', calculateTotal);
+  } else {
+    document.getElementById('customQty').addEventListener('input', calculateTotal);
+  }
+}
+
+// Calculate total and update breakdown
+function calculateTotal() {
+  let total = 0;
+  const breakdown = document.getElementById('breakdown');
+  breakdown.innerHTML = '';
+  quoteList.forEach(item=>{
+    const lineTotal = item.qty * item.unit;
+    total += lineTotal;
+    const div = document.createElement('div');
+    div.textContent = `${item.label} x ${item.qty} = €${lineTotal}`;
+    breakdown.appendChild(div);
+  });
+  document.getElementById('liveTotal').textContent = `€${total}`;
+}
 
 // Add service to quote
 addServiceBtn.addEventListener('click', () => {
-  let service = serviceSelect.value;
-  let qty = parseInt(qtyInput.value) || 1;
-  let title = serviceNames[service];
-  if(service === 'custom'){
+  const s = serviceSelect.value;
+  let qty = 1;
+  let label = PRICES[s].label;
+  let unit = PRICES[s].unit;
+
+  if (s === 'custom') {
     const customTitle = document.getElementById('customTitle');
-    if(customTitle && customTitle.value.trim() !== '') title = customTitle.value.trim();
+    const customQty = document.getElementById('customQty');
+    if(customTitle && customTitle.value.trim()!=='') label = customTitle.value.trim();
+    if(customQty) qty = parseInt(customQty.value) || 1;
+  } else {
+    const qtyInput = document.getElementById('qty');
+    if(qtyInput) qty = parseInt(qtyInput.value) || 1;
   }
-  quote.push({service, title, qty, price: PRICES[service]});
-  renderQuote();
+
+  quoteList.push({service:s,label,qty,unit});
+  calculateTotal();
 });
 
-// Render quote
-function renderQuote(){
-  quoteList.innerHTML = '';
-  let total = 0;
-  let breakdownHTML = '';
-  quote.forEach((item, i) => {
-    const lineTotal = item.qty * item.price;
-    total += lineTotal;
-    const div = document.createElement('div');
-    div.className = 'service-item';
-    div.innerHTML = `<span>${item.title} x ${item.qty}</span><span>€${lineTotal}</span>`;
-    quoteList.appendChild(div);
-  });
-  totalAmount.textContent = `€${total}`;
-  breakdown.innerHTML = quoteList.innerHTML;
-}
-
-// Reset
-document.getElementById('resetBtn').addEventListener('click', () => {
-  quote = [];
-  renderQuote();
-  qtyInput.value = 1;
-  document.getElementById('notes').value = '';
-  document.getElementById('custName').value = '';
-  document.getElementById('custEmail').value = '';
-  document.getElementById('custPhone').value = '';
-  document.getElementById('custPost').value = '';
-});
+// Initialize
+serviceSelect.addEventListener('change', renderDynamicOptions);
+renderDynamicOptions();
 </script>
 </body>
 </html>
