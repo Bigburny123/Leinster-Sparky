@@ -87,19 +87,20 @@
       <section class="card">
         <h2 style="margin-top:0">Build your quote</h2>
 
-        <div>
-          <label for="serviceSelect">Main service</label>
-          <select id="serviceSelect">
-            <option value="general">Assessment / Callout</option>
-            <option value="sockets">Socket replacement / installation</option>
-            <option value="lighting">Light fitting or replacement</option>
-            <option value="rewire">Partial rewire (per room)</option>
-            <option value="fuse">Fuseboard / consumer unit</option>
-            <option value="ev">EV charger (supply & fit)</option>
-            <option value="inspection">Inspection & certificate</option>
-            <option value="custom">Custom (describe below)</option>
-          </select>
-        </div>
+       <div>
+  <label>Main services</label>
+  <div class="services-list" id="mainServicesList">
+    <div class="service"><label><input type="checkbox" data-service="general"> Assessment / Callout</label><input type="number" min="1" value="1" data-qty="general" style="margin-top:4px;width:60px"></div>
+    <div class="service"><label><input type="checkbox" data-service="sockets"> Socket replacement / installation</label><input type="number" min="1" value="1" data-qty="sockets" style="margin-top:4px;width:60px"></div>
+    <div class="service"><label><input type="checkbox" data-service="lighting"> Light fitting or replacement</label><input type="number" min="1" value="1" data-qty="lighting" style="margin-top:4px;width:60px"></div>
+    <div class="service"><label><input type="checkbox" data-service="rewire"> Partial rewire (per room)</label><input type="number" min="1" value="1" data-qty="rewire" style="margin-top:4px;width:60px"></div>
+    <div class="service"><label><input type="checkbox" data-service="fuse"> Fuseboard / consumer unit</label><input type="number" min="1" value="1" data-qty="fuse" style="margin-top:4px;width:60px"></div>
+    <div class="service"><label><input type="checkbox" data-service="ev"> EV charger (supply & fit)</label><input type="number" min="1" value="1" data-qty="ev" style="margin-top:4px;width:60px"></div>
+    <div class="service"><label><input type="checkbox" data-service="inspection"> Inspection & certificate</label><input type="number" min="1" value="1" data-qty="inspection" style="margin-top:4px;width:60px"></div>
+    <div class="service"><label><input type="checkbox" data-service="custom"> Custom (describe below)</label><input type="number" min="1" value="1" data-qty="custom" style="margin-top:4px;width:60px"></div>
+  </div>
+</div>
+
 
         <div style="margin-top:12px;" id="dynamicOptions">
           <!-- JavaScript injects quantity / options here -->
