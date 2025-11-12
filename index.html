@@ -34,214 +34,118 @@
     padding: 1.5rem;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   }
-  h1 {
-    margin: 0 0 0.5rem;
-  }
-  h2 {
-    color: var(--brand-1);
-  }
-  label, select, input, button {
-    font-size: 1rem;
-  }
-  select, input[type="number"] {
-    width: 100%;
-    margin: 0.5rem 0 1rem;
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-    border: 1px solid #ccc;
-  }
-  button {
-    background: var(--brand-1);
-    color: var(--text-light);
-    border: none;
-    border-radius: 0.5rem;
-    padding: 0.75rem 1rem;
-    cursor: pointer;
-  }
-  button:hover {
-    background: #007700;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1rem;
-  }
-  th, td {
-    border-bottom: 1px solid #ddd;
-    padding: 0.5rem;
-    text-align: left;
-  }
-  tfoot td {
-    font-weight: bold;
-  }
-  footer {
-    text-align: center;
-    color: var(--text-light);
-    padding: 1.5rem 1rem;
-  }
-  footer a {
-    color: var(--text-light);
-    text-decoration: none;
-  }
+  h1 { margin: 0 0 0.5rem; }
+  h2 { color: var(--brand-1); }
+  label, select, input, button { font-size: 1rem; }
+  select, input[type="number"] { width: 100%; margin: 0.5rem 0 1rem; padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #ccc; }
+  button { background: var(--brand-1); color: var(--text-light); border: none; border-radius: 0.5rem; padding: 0.75rem 1rem; cursor: pointer; }
+  button:hover { background: #007700; }
+  table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+  th, td { border-bottom: 1px solid #ddd; padding: 0.5rem; text-align: left; }
+  tfoot td { font-weight: bold; }
+  footer { text-align: center; color: var(--text-light); padding: 1.5rem 1rem; }
+  footer a { color: var(--text-light); text-decoration: none; }
 </style>
 </head>
 <body>
-  <header>
-    <h1>Leinster Sparky</h1>
-    <p>Instant Electrical Quote Builder</p>
-  </header>
-  <div class="container">
-    <h2>Build Your Quote</h2>
-    <label for="service">Select Service:</label>
-    <select id="service">
-      <option value="">-- Choose a service --</option>
-      <option value="socket">Socket Replacement</option>
-      <option value="light">Light Replacement</option>
-      <option value="switch">Switch Replacement</option>
-      <option value="fuseboard">Fuse Board Upgrade</option>
-      <option value="rewire">Full Rewire</option>
-      <option value="ev">EV Charger Install</option>
-      <option value="cert">Safety Certificate</option>
-      <option value="callout">Callout</option>
-    </select>
-    <label for="quantity">Quantity:</label>
-    <input type="number" id="quantity" min="1" value="1" />
-    <button id="addService">Add to Quote</button>
-
-    <table id="quoteTable" style="display:none">
-      <thead>
-        <tr>
-          <th>Service</th>
-          <th>Qty</th>
-          <th>Price</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-      <tfoot>
-        <tr>
-          <td colspan="2">Subtotal</td>
-          <td id="subtotal">€0</td>
-          <td></td>
-        </tr>
-        <tr>
-          <td colspan="2">Discount</td>
-          <td id="discount">€0</td>
-          <td></td>
-        </tr>
-        <tr>
-          <td colspan="2">Total</td>
-          <td id="total">€0</td>
-          <td></td>
-        </tr>
-      </tfoot>
-    </table>
-
-    <h2>Your Details</h2>
-    <label>Name:</label>
-    <input type="text" id="custName" placeholder="Your name" />
-    <label>Email:</label>
-    <input type="email" id="custEmail" placeholder="your@email.com" />
-    <label>Address:</label>
-    <input type="text" id="custAddress" placeholder="Address or Eircode" />
-
-    <button id="sendQuote">Send Estimate</button>
-
-    <p style="margin-top:1rem;font-size:0.9rem;color:#555">
-      *All quotes are estimates only and subject to inspection. Final prices may vary based on site conditions and materials.
-    </p>
-  </div>
-  <footer>
-    <p><strong>Leinster Sparky</strong><br>Ryan Byrne<br>
-      📧 <a href="mailto:ryanbyrne1412@gmail.com">ryanbyrne1412@gmail.com</a><br>
-      📞 <a href="tel:0831889402">083 188 9402</a></p>
-  </footer>
-
-  <script>
-    const PRICES = {
-      socket: 30,
-      light: 30,
-      switch: 30,
-      fuseboard: 400,
-      rewire: 2500,
-      ev: 900,
-      cert: 60,
-      callout: 70
-    };
-
-    const services = [];
-
-    const serviceEl = document.getElementById('service');
-    const qtyEl = document.getElementById('quantity');
-    const addBtn = document.getElementById('addService');
-    const table = document.getElementById('quoteTable');
-    const tbody = table.querySelector('tbody');
-
-    function refreshTable() {
-      tbody.innerHTML = '';
-      if (services.length === 0) {
-        table.style.display = 'none';
-        return;
-      }
-      table.style.display = 'table';
-      let subtotal = 0;
-      services.forEach((s, i) => {
-        const row = document.createElement('tr');
-        const lineTotal = s.price * s.qty;
-        subtotal += lineTotal;
-        row.innerHTML = `<td>${s.name}</td><td>${s.qty}</td><td>€${lineTotal.toFixed(2)}</td><td><button data-index="${i}" style="background:#ccc;color:#000;padding:0.2rem 0.5rem;border:none;border-radius:4px;cursor:pointer;">x</button></td>`;
-        tbody.appendChild(row);
-      });
-      const smallItems = services.filter(s => s.price <= 30).reduce((a,s)=>a+s.qty,0);
-      let discount = 0;
-      if (smallItems >= 5) discount = subtotal * 0.15;
-      else if (smallItems >= 3) discount = subtotal * 0.10;
-      const total = subtotal - discount;
-      document.getElementById('subtotal').textContent = `€${subtotal.toFixed(2)}`;
-      document.getElementById('discount').textContent = `€${discount.toFixed(2)}`;
-      document.getElementById('total').textContent = `€${total.toFixed(2)}`;
-
-      tbody.querySelectorAll('button').forEach(btn => {
-        btn.addEventListener('click', e => {
-          const i = e.target.dataset.index;
-          services.splice(i, 1);
-          refreshTable();
-        });
-      });
-    }
-
-    addBtn.addEventListener('click', () => {
-      const key = serviceEl.value;
-      const qty = parseInt(qtyEl.value) || 1;
-      if (!key) return alert('Please select a service.');
-      services.push({ name: serviceEl.options[serviceEl.selectedIndex].text, price: PRICES[key], qty });
-      refreshTable();
-    });
-
-    document.getElementById('sendQuote').addEventListener('click', () => {
-      if (services.length === 0) return alert('Add at least one service first.');
-      const name = document.getElementById('custName').value;
-      const email = document.getElementById('custEmail').value;
-      const address = document.getElementById('custAddress').value;
-      if (!name || !email) return alert('Please fill in your name and email.');
-
-      let body = `Estimate request from ${name}%0D%0AEmail: ${email}%0D%0AAddress: ${address}%0D%0A%0D%0AItems:%0D%0A`;
-      let subtotal = 0;
-      services.forEach(s => {
-        const lineTotal = s.price * s.qty;
-        subtotal += lineTotal;
-        body += ` - ${s.name} x${s.qty}: €${lineTotal.toFixed(2)}%0D%0A`;
-      });
-      const smallItems = services.filter(s => s.price <= 30).reduce((a,s)=>a+s.qty,0);
-      let discount = 0;
-      if (smallItems >= 5) discount = subtotal * 0.15;
-      else if (smallItems >= 3) discount = subtotal * 0.10;
-      const total = subtotal - discount;
-      body += `%0D%0ASubtotal: €${subtotal.toFixed(2)}%0D%0ADiscount: €${discount.toFixed(2)}%0D%0ATotal: €${total.toFixed(2)}%0D%0A%0D%0A*Estimate only. Subject to inspection.*`;
-
-      const mailto = `mailto:ryanbyrne1412@gmail.com?subject=New Quote Request from ${encodeURIComponent(name)}&body=${body}`;
-      window.location.href = mailto;
-    });
-  </script>
+<header>
+<h1>Leinster Sparky</h1>
+<p>Instant Electrical Quote Builder</p>
+</header>
+<div class="container">
+<h2>Build Your Quote</h2>
+<label for="service">Select Service:</label>
+<select id="service">
+  <option value="">-- Choose a service --</option>
+  <option value="socket">Socket Replacement</option>
+  <option value="light">Light Replacement</option>
+  <option value="switch">Switch Replacement</option>
+  <option value="fuseboard">Fuse Board Upgrade</option>
+  <option value="rewire">Full Rewire</option>
+  <option value="ev">EV Charger Install</option>
+  <option value="cert">Safety Certificate</option>
+  <option value="callout">Callout</option>
+</select>
+<label for="quantity">Quantity:</label>
+<input type="number" id="quantity" min="1" value="1" />
+<button id="addService">Add to Quote</button>
+<table id="quoteTable" style="display:none">
+  <thead>
+    <tr><th>Service</th><th>Qty</th><th>Price</th><th></th></tr>
+  </thead>
+  <tbody></tbody>
+  <tfoot>
+    <tr><td colspan="2">Subtotal</td><td id="subtotal">€0</td><td></td></tr>
+    <tr><td colspan="2">Discount</td><td id="discount">€0</td><td></td></tr>
+    <tr><td colspan="2">Total</td><td id="total">€0</td><td></td></tr>
+  </tfoot>
+</table>
+<h2>Your Details</h2>
+<label>Name:</label>
+<input type="text" id="custName" placeholder="Your name" />
+<label>Email:</label>
+<input type="email" id="custEmail" placeholder="your@email.com" />
+<label>Address:</label>
+<input type="text" id="custAddress" placeholder="Address or Eircode" />
+<button id="sendQuote">Send Estimate</button>
+<p style="margin-top:1rem;font-size:0.9rem;color:#555">*All quotes are estimates only and subject to inspection. Final prices may vary based on site conditions and materials.</p>
+</div>
+<footer>
+<p><strong>Leinster Sparky</strong><br>Ryan Byrne<br>📧 <a href="mailto:ryanbyrne1412@gmail.com">ryanbyrne1412@gmail.com</a><br>📞 <a href="tel:0831889402">083 188 9402</a></p>
+</footer>
+<script>
+const PRICES = { socket:30, light:30, switch:30, fuseboard:400, rewire:2500, ev:900, cert:60, callout:70 };
+const services=[];
+const serviceEl=document.getElementById('service');
+const qtyEl=document.getElementById('quantity');
+const addBtn=document.getElementById('addService');
+const table=document.getElementById('quoteTable');
+const tbody=table.querySelector('tbody');
+function refreshTable(){
+  tbody.innerHTML='';
+  if(services.length===0){table.style.display='none';return;}
+  table.style.display='table';
+  let subtotal=0;
+  services.forEach((s,i)=>{
+    const row=document.createElement('tr');
+    const lineTotal=s.price*s.qty;
+    subtotal+=lineTotal;
+    row.innerHTML=`<td>${s.name}</td><td>${s.qty}</td><td>€${lineTotal.toFixed(2)}</td><td><button data-index="${i}" style="background:#ccc;color:#000;padding:0.2rem 0.5rem;border:none;border-radius:4px;cursor:pointer;">x</button></td>`;
+    tbody.appendChild(row);
+  });
+  const smallItems=services.filter(s=>s.price<=30).reduce((a,s)=>a+s.qty,0);
+  let discount=0;
+  if(smallItems>=5) discount=subtotal*0.15;
+  else if(smallItems>=3) discount=subtotal*0.10;
+  const total=subtotal-discount;
+  document.getElementById('subtotal').textContent=`€${subtotal.toFixed(2)}`;
+  document.getElementById('discount').textContent=`€${discount.toFixed(2)}`;
+  document.getElementById('total').textContent=`€${total.toFixed(2)}`;
+  tbody.querySelectorAll('button').forEach(btn=>{btn.addEventListener('click',e=>{const i=e.target.dataset.index;services.splice(i,1);refreshTable();});});
+}
+addBtn.addEventListener('click',()=>{
+  const key=serviceEl.value;
+  const qty=parseInt(qtyEl.value)||1;
+  if(!key) return alert('Please select a service.');
+  services.push({ name:serviceEl.options[serviceEl.selectedIndex].text, price:PRICES[key], qty });
+  refreshTable();
+});
+document.getElementById('sendQuote').addEventListener('click',()=>{
+  if(services.length===0) return alert('Add at least one service first.');
+  const name=document.getElementById('custName').value;
+  const email=document.getElementById('custEmail').value;
+  const address=document.getElementById('custAddress').value;
+  if(!name||!email) return alert('Please fill in your name and email.');
+  let body=`Estimate request from ${name}%0D%0AEmail: ${email}%0D%0AAddress: ${address}%0D%0A%0D%0AItems:%0D%0A`;
+  let subtotal=0;
+  services.forEach(s=>{const lineTotal=s.price*s.qty;subtotal+=lineTotal;body+=` - ${s.name} x${s.qty}: €${lineTotal.toFixed(2)}%0D%0A`;});
+  const smallItems=services.filter(s=>s.price<=30).reduce((a,s)=>a+s.qty,0);
+  let discount=0;if(smallItems>=5) discount=subtotal*0.15;else if(smallItems>=3) discount=subtotal*0.10;
+  const total=subtotal-discount;
+  body+=`%0D%0ASubtotal: €${subtotal.toFixed(2)}%0D%0ADiscount: €${discount.toFixed(2)}%0D%0ATotal: €${total.toFixed(2)}%0D%0A%0D%0A*Estimate only. Subject to inspection.*`;
+  const mailto=`mailto:ryanbyrne1412@gmail.com?subject=New Quote Request from ${encodeURIComponent(name)}&body=${body}`;
+  window.location.href=mailto;
+});
+</script>
 </body>
 </html>
