@@ -94,7 +94,12 @@ button.ghost{background:transparent;border:1px solid #e6eef3;padding:10px 14px;b
 </div>
 
 <script>
-// Prices
+const CONFIG = {
+  currency:'€',
+  businessName:'Leinster Sparky',
+  OWNER_EMAIL:'ryanbyrne1412@gmail.com'
+};
+
 const PRICES = {
   general: {label:'Assessment / Callout', unit:45},
   sockets: {label:'Socket (single)', unit:30},
@@ -106,79 +111,156 @@ const PRICES = {
   custom: {label:'Custom item', unit:0}
 };
 
-// DOM
+const EXTRA_PRICES = {callout:45, certificate:60, weekend:80, smart:35};
+const SMALL_TYPES = ['sockets','lighting','smart'];
+
+let quoteList = []; // stores all added services
+
+// DOM elements
 const serviceSelect = document.getElementById('serviceSelect');
 const dynamicOptions = document.getElementById('dynamicOptions');
-const qtyInput = document.getElementById('qty');
-const addServiceBtn = document.createElement('button');
-addServiceBtn.textContent = 'Add to quote';
-addServiceBtn.className = 'primary';
-dynamicOptions.appendChild(addServiceBtn);
+const extrasList = document.getElementById('extrasList');
+const notes = document.getElementById('notes');
+const liveTotal = document.getElementById('liveTotal');
+const breakdown = document.getElementById('breakdown');
+const previewBtn = document.getElementById('previewBtn');
+const modal = document.getElementById('modal');
+const modalBody = document.getElementById('modalBody');
+const modalTotal = document.getElementById('modalTotal');
+const closeModal = document.getElementById('closeModal');
+const custName = document.getElementById('custName');
+const custEmail = document.getElementById('custEmail');
+const custPhone = document.getElementById('custPhone');
+const custPost = document.getElementById('custPost');
+const sendToCustomer = document.getElementById('sendToCustomer');
+const sendToOwner = document.getElementById('sendToOwner');
+const resetBtn = document.getElementById('resetBtn');
+const downloadBtn = document.getElementById('downloadBtn');
 
-const quoteList = []; // array of added services
-
-function renderDynamicOptions() {
+// Render quantity input
+function renderDynamicOptions(){
   const s = serviceSelect.value;
   dynamicOptions.innerHTML = '';
-  let html = '';
-  if (s === 'custom') {
+  let html='';
+  if(s==='custom'){
     html += `<label>Custom item title</label><input id='customTitle' placeholder='e.g. install new consumer unit'>`;
     html += `<label style='margin-top:10px'>Estimated units / qty</label><input id='customQty' type='number' min='1' value='1'>`;
   } else {
     html += `<label>Quantity</label><input id='qty' type='number' min='1' value='1'>`;
   }
-  const priceLabel = PRICES[s] ? PRICES[s].unit : 0;
+  const priceLabel = PRICES[s]?PRICES[s].unit:0;
   const fromText = (s==='rewire'||s==='fuse'||s==='ev')?'from ':'';
-  html += `<div class="muted" style="margin-top:8px">Unit price: ${fromText}€${priceLabel} (${PRICES[s]?PRICES[s].label:''})</div>`;
+  html += `<div class="muted" style="margin-top:8px">Unit price: ${fromText}${CONFIG.currency}${priceLabel} (${PRICES[s]?PRICES[s].label:''})</div>`;
+  const addBtn = document.createElement('button');
+  addBtn.textContent='Add to quote';
+  addBtn.className='primary';
   dynamicOptions.innerHTML = html;
-  dynamicOptions.appendChild(addServiceBtn);
+  dynamicOptions.appendChild(addBtn);
 
-  if(s !== 'custom'){
-    document.getElementById('qty').addEventListener('input', calculateTotal);
-  } else {
-    document.getElementById('customQty').addEventListener('input', calculateTotal);
-  }
-}
-
-// Calculate total and update breakdown
-function calculateTotal() {
-  let total = 0;
-  const breakdown = document.getElementById('breakdown');
-  breakdown.innerHTML = '';
-  quoteList.forEach(item=>{
-    const lineTotal = item.qty * item.unit;
-    total += lineTotal;
-    const div = document.createElement('div');
-    div.textContent = `${item.label} x ${item.qty} = €${lineTotal}`;
-    breakdown.appendChild(div);
+  addBtn.addEventListener('click',()=>{
+    let qty=1,label=PRICES[s].label,unit=PRICES[s].unit;
+    if(s==='custom'){
+      const customTitle=document.getElementById('customTitle');
+      const customQty=document.getElementById('customQty');
+      if(customTitle && customTitle.value.trim()!=='') label=customTitle.value.trim();
+      if(customQty) qty=parseInt(customQty.value)||1;
+    } else {
+      const qtyInput=document.getElementById('qty');
+      if(qtyInput) qty=parseInt(qtyInput.value)||1;
+    }
+    // Extras
+    const selectedExtras={};
+    extrasList.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+      if(cb.checked) selectedExtras[cb.dataset.extra]=true;
+    });
+    quoteList.push({service:s,label,qty,unit,extras:selectedExtras});
+    calculate();
   });
-  document.getElementById('liveTotal').textContent = `€${total}`;
 }
 
-// Add service to quote
-addServiceBtn.addEventListener('click', () => {
-  const s = serviceSelect.value;
-  let qty = 1;
-  let label = PRICES[s].label;
-  let unit = PRICES[s].unit;
+// Calculate total with discounts
+function calculate(){
+  let total=0;
+  breakdown.innerHTML='';
+  let smallCount=0;
+  quoteList.forEach(item=>{
+    const itemTotal=item.unit*item.qty;
+    total+=itemTotal;
+    const div=document.createElement('div');
+    div.textContent=`${item.label} x ${item.qty} = ${CONFIG.currency}${itemTotal}`;
+    breakdown.appendChild(div);
+    SMALL_TYPES.forEach(st=>{
+      if(item.service===st || item.extras[st]) smallCount+=item.qty;
+    });
+    // Extras line
+    for(const k in item.extras){
+      if(EXTRA_PRICES[k]){
+        const eTotal=EXTRA_PRICES[k];
+        total+=eTotal;
+        const eDiv=document.createElement('div');
+        eDiv.textContent=`${k} = ${CONFIG.currency}${eTotal}`;
+        breakdown.appendChild(eDiv);
+        if(SMALL_TYPES.includes(k)) smallCount+=1;
+      }
+    }
+  });
 
-  if (s === 'custom') {
-    const customTitle = document.getElementById('customTitle');
-    const customQty = document.getElementById('customQty');
-    if(customTitle && customTitle.value.trim()!=='') label = customTitle.value.trim();
-    if(customQty) qty = parseInt(customQty.value) || 1;
-  } else {
-    const qtyInput = document.getElementById('qty');
-    if(qtyInput) qty = parseInt(qtyInput.value) || 1;
+  // Discount
+  let discountPct=0;
+  if(smallCount>=5) discountPct=0.15;
+  else if(smallCount>=3) discountPct=0.10;
+  const discountAmt=Math.round(total*discountPct);
+  total-=discountAmt;
+  if(discountAmt>0){
+    const div=document.createElement('div');
+    div.textContent=`Discount applied: -${CONFIG.currency}${discountAmt} (${Math.round(discountPct*100)}%)`;
+    breakdown.appendChild(div);
   }
 
-  quoteList.push({service:s,label,qty,unit});
-  calculateTotal();
+  liveTotal.textContent=`${CONFIG.currency}${total}`;
+}
+
+// Preview modal
+previewBtn.addEventListener('click',()=>{
+  modalBody.innerHTML='';
+  const custInfo=`<div><strong>Customer</strong>: ${custName.value || '—'}<br>${custEmail.value ? custEmail.value+'<br>':''}${custPhone.value ? custPhone.value+'<br>':''}${custPost.value ? custPost.value+'<br>':''}</div>`;
+  modalBody.innerHTML+=custInfo+'<hr><div><strong>Estimate</strong></div>';
+  let subtotal=0;
+  quoteList.forEach(item=>{
+    let lineTotal=item.unit*item.qty;
+    subtotal+=lineTotal;
+    modalBody.innerHTML+=`<div>${item.label} x ${item.qty} = ${CONFIG.currency}${lineTotal}</div>`;
+    for(const k in item.extras){
+      if(EXTRA_PRICES[k]){
+        subtotal+=EXTRA_PRICES[k];
+        modalBody.innerHTML+=`<div>${k} = ${CONFIG.currency}${EXTRA_PRICES[k]}</div>`;
+      }
+    }
+  });
+  // Discount
+  let smallCount=0;
+  quoteList.forEach(item=>{
+    SMALL_TYPES.forEach(st=>{
+      if(item.service===st || item.extras[st]) smallCount+=item.qty;
+    });
+  });
+  let discountPct=0;
+  if(smallCount>=5) discountPct=0.15;
+  else if(smallCount>=3) discountPct=0.10;
+  const discountAmt=Math.round(subtotal*discountPct);
+  subtotal-=discountAmt;
+  if(discountAmt>0) modalBody.innerHTML+=`<div>Discount applied: -${CONFIG.currency}${discountAmt} (${Math.round(discountPct*100)}%)</div>`;
+  modalTotal.textContent=`${CONFIG.currency}${subtotal}`;
+  modal.classList.add('open');
 });
 
-// Initialize
-serviceSelect.addEventListener('change', renderDynamicOptions);
-renderDynamicOptions();
-</script>
+closeModal.addEventListener('click',()=>modal.classList.remove('open'));
+
+// Reset
+resetBtn.addEventListener('click',()=>{
+  quoteList=[];
+  serviceSelect.value='general';
+  document.querySelectorAll('#extrasList input[type=checkbox]').forEach(cb=>cb.c
+
 </body>
 </html>
