@@ -42,7 +42,6 @@
     .watermark{position:absolute;right:-40px;top:120px;opacity:0.06;font-size:160px;font-weight:900;color:var(--brand-1);transform:rotate(-20deg);pointer-events:none}
 
     .small{font-size:13px;color:var(--muted)}
-    input[disabled]{background:#e8f0ed;}
   </style>
 </head>
 <body>
@@ -87,27 +86,27 @@
 
         <div style="margin-top:12px">
           <label for="custName">Your name</label>
-          <input id="custName" type="text" placeholder="Full name" disabled required>
+          <input id="custName" type="text" placeholder="Full name" required>
         </div>
 
         <div style="margin-top:12px">
           <label for="custEmail">Your email</label>
-          <input id="custEmail" type="email" placeholder="you@example.com" disabled required>
+          <input id="custEmail" type="email" placeholder="you@example.com" required>
         </div>
 
         <div style="margin-top:12px">
           <label for="custPhone">Phone</label>
-          <input id="custPhone" type="text" placeholder="(optional)" disabled>
+          <input id="custPhone" type="text" placeholder="(optional)">
         </div>
 
         <div style="margin-top:12px">
           <label for="custEircode">Eircode</label>
-          <input id="custEircode" type="text" placeholder="e.g. R32X4E1" disabled>
+          <input id="custEircode" type="text" placeholder="e.g. R32X4E1">
         </div>
 
         <div style="margin-top:12px">
           <label for="notes">Notes / custom description</label>
-          <textarea id="notes" rows="3" placeholder="Any additional notes" disabled></textarea>
+          <textarea id="notes" rows="3" placeholder="Any additional notes"></textarea>
         </div>
 
         <div style="margin-top:12px" class="row">
@@ -143,13 +142,13 @@
     const breakdown = document.getElementById('breakdown');
 
     const PRICES = {
-      "Socket Installation":30,
-      "Lighting":30,
-      "Fuseboard":650,
-      "Outdoor Socket":100,
-      "Hang a TV":40,
-      "Xmas Lights (small run)":60,
-      "Xmas Lights (big run)":110
+      "Socket Installation": 30,
+      "Lighting": 30,
+      "Fuseboard": 650,
+      "Outdoor Socket": 100,
+      "Hang a TV": 40,
+      "Xmas Lights (small run)": 60,
+      "Xmas Lights (big run)": 120
     };
 
     let allServices = [];
@@ -170,38 +169,28 @@
     function addService(){
       const key = serviceSelect.value;
       const qty = Number(document.getElementById('qty').value || 1);
-      const basePrice = (PRICES[key]||0)*qty;
-      allServices.push({key, qty, price: basePrice});
+      let basePrice = (PRICES[key]||0)*qty;
+      let distanceSurcharge = calculateDistanceSurcharge(custEircode.value);
+
+      allServices.push({
+        key,
+        qty,
+        price: basePrice,
+        distanceSurcharge
+      });
       updateBreakdown();
-      // enable customer info fields after at least one service
-      custName.disabled = custEmail.disabled = custPhone.disabled = custEircode.disabled = notes.disabled = false;
     }
 
     function updateBreakdown(){
       if(allServices.length===0){liveTotal.textContent='€0'; breakdown.innerHTML='No items selected yet.'; return;}
-      let subtotal=0;
+      let total=0;
       breakdown.innerHTML="";
       allServices.forEach(s=>{
-        subtotal += s.price;
-        breakdown.innerHTML+=`${s.key} x ${s.qty} => €${s.price}\n`;
+        const serviceTotal = s.price + s.distanceSurcharge;
+        total += serviceTotal;
+        breakdown.innerHTML+=`${s.key} x ${s.qty} => €${serviceTotal}${s.distanceSurcharge>0?` (Distance surcharge €${s.distanceSurcharge})`:''}<br>`;
       });
-
-      // apply discount
-      let discount = 0;
-      if(allServices.length >=5) discount = 15;
-      else if(allServices.length >=3) discount = 10;
-
-      let discountAmount = subtotal * (discount/100);
-      let total = subtotal - discountAmount;
-
-      // distance surcharge
-      let distanceSurcharge = calculateDistanceSurcharge(custEircode.value);
-      total += distanceSurcharge;
-
-      breakdown.innerHTML += discount>0?`Discount (${discount}%): -€${discountAmount.toFixed(2)}\n`:"";
-      if(distanceSurcharge>0) breakdown.innerHTML += `Distance surcharge: €${distanceSurcharge}\n`;
-
-      liveTotal.textContent=`€${total.toFixed(2)}`;
+      liveTotal.textContent=`€${total}`;
     }
 
     addServiceBtn.addEventListener('click', addService);
@@ -209,7 +198,6 @@
     resetBtn.addEventListener('click', ()=>{
       allServices=[]; renderDynamicOptions(); updateBreakdown();
       notes.value=''; custName.value=''; custEmail.value=''; custPhone.value=''; custEircode.value='';
-      custName.disabled = custEmail.disabled = custPhone.disabled = custEircode.disabled = notes.disabled = true;
     });
 
     previewBtn.addEventListener('click', ()=>{
@@ -223,7 +211,7 @@
         return;
       }
 
-      const rows = breakdown.innerHTML.replace(/\n/g,'<br>');
+      const rows = breakdown.innerHTML;
       const total = liveTotal.textContent.replace('€','');
       const templateParams = {
         to_name: custName.value || "Customer",
@@ -240,7 +228,12 @@
       console.log(templateParams);
 
       emailjs.send("service_3mekcch","template_359siqa",templateParams)
-        .then(()=>{alert("Quote sent successfully!")},(err)=>{console.error(err); alert("Failed to send quote, check console.");});
+        .then(()=>{
+          alert("Quote sent successfully!");
+        },(err)=>{
+          console.error(err);
+          alert("Failed to send quote, check console.");
+        });
     });
   </script>
 </body>
