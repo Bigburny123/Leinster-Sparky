@@ -47,14 +47,6 @@
 
     footer{margin-top:20px;color:var(--muted);font-size:13px;text-align:center}
 
-    .modal{position:fixed;inset:0;background:rgba(6,10,15,0.38);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;visibility:hidden;opacity:0;transition:opacity .18s,visibility .18s}
-    .modal.open{visibility:visible;opacity:1}
-    .modal-card{background:#fff;padding:18px;border-radius:12px;max-width:760px;width:100%;box-shadow:0 12px 42px rgba(11,18,32,0.14)}
-    .modal-grid{display:grid;grid-template-columns:1fr 240px;gap:16px}
-    @media (max-width:820px){.modal-grid{grid-template-columns:1fr}}
-    .disclaimer{font-size:13px;color:var(--muted);margin-top:6px}
-    .small{font-size:13px;color:var(--muted)}
-
     .watermark{position:absolute;right:-40px;top:120px;opacity:0.06;font-size:160px;font-weight:900;color:var(--brand-1);transform:rotate(-20deg);pointer-events:none}
 
     .contact{font-weight:700}
@@ -137,6 +129,7 @@
     </main>
   </div>
 
+  <!-- EmailJS and Script -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script>
     emailjs.init("rCNjUdb4qChPXsU34");
@@ -171,9 +164,9 @@
     renderDynamicOptions();
 
     function calculateDistanceSurcharge(eircode){
-      // Placeholder: currently always adds 0 if <=20km, else 10 per 15km over
+      // Placeholder distance logic: 0 if <=20km, else €10 per 15km
       if(!eircode) return 0;
-      let distanceKm = 25; // example placeholder
+      let distanceKm = 25; // Replace with real calculation
       if(distanceKm <= 20) return 0;
       return Math.ceil((distanceKm-20)/15)*10;
     }
@@ -184,12 +177,7 @@
       let basePrice = (PRICES[key]||0)*qty;
       let distanceSurcharge = calculateDistanceSurcharge(custEircode.value);
 
-      allServices.push({
-        key,
-        qty,
-        price: basePrice,
-        distanceSurcharge
-      });
+      allServices.push({key, qty, price: basePrice, distanceSurcharge});
       updateBreakdown();
     }
 
@@ -212,21 +200,20 @@
 
     previewBtn.addEventListener('click', ()=>{
       if(allServices.length===0){alert("Add at least one service"); return;}
-      const rows = breakdown.innerHTML;
-      const total = liveTotal.textContent.replace('€','');
       const templateParams = {
         to_name: custName.value,
         to_email: custEmail.value,
         owner_email: "ryanbyrne1412@gmail.com",
-        items_html: rows,
-        total: total,
+        items_html: breakdown.innerHTML,
+        total: liveTotal.textContent.replace('€',''),
         phone: custPhone.value,
         eircode: custEircode.value,
         property_type: propertyType.value,
         notes: notes.value
       };
       emailjs.send("service_3mekcch","template_359siqa",templateParams)
-        .then(()=>{alert("Quote sent successfully!")},(err)=>{console.error(err); alert("Failed to send quote, check console.")});
+        .then(()=>{alert("Quote sent successfully!");})
+        .catch(err=>{console.error(err); alert("Failed to send quote, check console.");});
     });
   </script>
 </body>
