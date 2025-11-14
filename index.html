@@ -1,285 +1,282 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Leinster Electrics — Instant Quote</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leinster Sparky Quote System</title>
+
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-    :root{
-      --brand-1: #2b8a3e;
-      --brand-2: #f5c200;
-      --bg-1: #f3f8f4;
-      --bg-2: #ffffff;
-      --muted: #51606a;
-      --card: #ffffff;
-      --radius: 12px;
-      --maxw: 1100px;
-      --accent-shadow: 0 8px 30px rgba(43,138,62,0.08);
+    body {
+      font-family: Arial, sans-serif;
+      background:#f4f4f4;
+      margin:0;
+      padding:20px;
     }
-    *{box-sizing:border-box}
-    body{font-family:Inter,system-ui,Arial,sans-serif;margin:0;background:linear-gradient(180deg,var(--bg-1),var(--bg-2));color:#07121a;-webkit-font-smoothing:antialiased}
-    .wrap{max-width:var(--maxw);margin:28px auto;padding:20px}
-    header{display:flex;align-items:center;gap:16px}
-    .logo{width:72px;height:72px;border-radius:14px;background:linear-gradient(135deg,var(--brand-1),var(--brand-2));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:22px;box-shadow:var(--accent-shadow)}
-    h1{margin:0;font-size:22px}
-    p.lead{margin:6px 0 20px;color:var(--muted)}
-
-    .grid{display:grid;grid-template-columns:1fr;gap:20px}
-
-    .card{background:var(--card);padding:18px;border-radius:var(--radius);box-shadow:0 6px 18px rgba(11,18,32,0.04)}
-    label{display:block;font-size:13px;color:var(--muted);margin-bottom:8px}
-    select,input[type=number],input[type=text],input[type=email],textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #e8f0ed;background:#fff;font-size:15px}
-    .row{display:flex;gap:12px}
-    .row > *{flex:1}
-
-    .services-list{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
-    .service{background:#fbfdfa;padding:12px;border-radius:10px;border:1px solid #eef7ee}
-    .service label{display:flex;align-items:center;gap:8px;margin:0}
-    .price{font-weight:700;color:var(--brand-1)}
-
-    .total{font-size:28px;font-weight:900;margin:0}
-    .muted{color:var(--muted);font-size:13px}
-    .small{font-size:13px}
-    button.primary{background:linear-gradient(90deg,var(--brand-1),#1e7f2f);color:#fff;padding:12px 18px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
-    button.ghost{background:transparent;border:1px solid #e6eef3;padding:10px 14px;border-radius:10px;cursor:pointer}
-
-    footer{text-align:center;color:var(--muted);font-size:13px;margin-top:20px}
-
-    .summary-block{margin-top:20px;padding:18px;border-radius:12px;background:#fff;box-shadow:0 6px 18px rgba(11,18,32,0.04)}
+    h2 { margin-top:0; }
+    .container {
+      max-width:900px;
+      margin:0 auto;
+      background:white;
+      padding:20px;
+      border-radius:10px;
+      box-shadow:0 0 10px rgba(0,0,0,0.1);
+    }
+    .section {
+      margin-bottom:20px;
+      padding-bottom:10px;
+      border-bottom:1px solid #ddd;
+    }
+    label { display:block; margin-top:10px; font-weight:bold; }
+    select, input, textarea, button {
+      width:100%;
+      padding:10px;
+      margin-top:5px;
+      border-radius:5px;
+      border:1px solid #ccc;
+      font-size:16px;
+    }
+    button {
+      cursor:pointer;
+      background:#007bff;
+      color:white;
+      border:none;
+      margin-top:15px;
+    }
+    button:hover { opacity:0.9; }
+    table {
+      width:100%;
+      border-collapse:collapse;
+      margin-top:20px;
+    }
+    table, th, td {
+      border:1px solid #ccc;
+    }
+    th, td {
+      padding:10px;
+      text-align:left;
+    }
+    #totalDisplay {
+      font-size:20px;
+      font-weight:bold;
+      margin-top:15px;
+    }
+    .bottom-buttons {
+      display:flex;
+      justify-content:space-between;
+      gap:20px;
+      margin-top:20px;
+    }
   </style>
 </head>
+
 <body>
-  <div class="wrap">
-    <header>
-      <div class="logo">LE</div>
-      <div>
-        <h1 id="bizName">Leinster Electrics</h1>
-        <p class="lead">Instant online estimates for domestic electrical work — fast, clear and mobile-friendly.</p>
-      </div>
-    </header>
 
-    <main class="grid" role="main">
-      <section class="card">
-        <h2 style="margin-top:0">Build your quote</h2>
+<div class="container">
 
-        <div>
-          <label for="serviceSelect">Main service</label>
-          <select id="serviceSelect">
-            <option value="general">Assessment / Callout</option>
-            <option value="sockets">Socket replacement / installation</option>
-            <option value="lighting">Light fitting or replacement</option>
-            <option value="rewire">Partial rewire (per room)</option>
-            <option value="fuse">Fuseboard / consumer unit</option>
-            <option value="ev">EV charger (supply & fit)</option>
-            <option value="inspection">Inspection & certificate</option>
-            <option value="custom">Custom (describe below)</option>
-          </select>
-        </div>
+  <h2>Leinster Sparky Instant Quote</h2>
 
-        <div style="margin-top:12px;" id="dynamicOptions"></div>
+  <!-- CUSTOMER DETAILS -->
+  <div class="section">
+    <label>Full Name</label>
+    <input id="custName" type="text">
 
-        <div style="margin-top:12px">
-          <label for="propertyType">Property type</label>
-          <select id="propertyType">
-            <option value="domestic">Domestic - House</option>
-            <option value="flat">Domestic - Flat / Apartment</option>
-            <option value="commercial">Commercial / Retail</option>
-          </select>
-        </div>
+    <label>Email</label>
+    <input id="custEmail" type="email">
 
-        <div style="margin-top:12px">
-          <label>Add-ons / extras</label>
-          <div class="services-list" id="extrasList">
-            <div class="service"><label><input type="checkbox" data-extra="callout"> Callout (within 10km) — <span class="price">€45</span></label></div>
-            <div class="service"><label><input type="checkbox" data-extra="certificate"> Electrical cert — <span class="price">€60</span></label></div>
-            <div class="service"><label><input type="checkbox" data-extra="weekend"> Weekend / urgent surcharge — <span class="price">€80</span></label></div>
-            <div class="service"><label><input type="checkbox" data-extra="smart"> Smart switch fitting — <span class="price">€35</span></label></div>
-          </div>
-        </div>
+    <label>Phone Number</label>
+    <input id="custPhone" type="text">
 
-        <div style="margin-top:12px">
-          <label for="notes">Notes / custom description</label>
-          <textarea id="notes" rows="3" placeholder="Describe custom work if 'Custom' service selected"></textarea>
-        </div>
+    <label>Eircode</label>
+    <input id="custEircode" type="text" placeholder="A91X4E1">
 
-        <div style="margin-top:12px" class="row">
-          <div>
-            <label for="custName">Your name</label>
-            <input id="custName" type="text" placeholder="Full name">
-          </div>
-          <div>
-            <label for="custEmail">Your email</label>
-            <input id="custEmail" type="email" placeholder="you@example.com">
-          </div>
-        </div>
+    <label>Property Type</label>
+    <select id="custType">
+      <option value="House">House</option>
+      <option value="Apartment">Apartment</option>
+      <option value="Commercial">Commercial</option>
+    </select>
 
-        <div style="margin-top:12px" class="row">
-          <div>
-            <label for="custPhone">Phone</label>
-            <input id="custPhone" type="text" placeholder="(optional)">
-          </div>
-          <div>
-            <label for="custPost">Eircode</label>
-            <input id="custPost" type="text" placeholder="e.g. R32 ABC">
-          </div>
-        </div>
-
-        <div class="summary-block">
-            <div class="muted">Estimate total</div>
-            <div class="total" id="liveTotal">€0</div>
-            <hr style="margin:12px 0;border:none;border-top:1px solid #eef4f2">
-            <div id="breakdown" class="small muted">No items selected yet.</div>
-        </div>
-
-        <div style="margin-top:12px;display:flex;gap:10px;align-items:center">
-          <button id="addServiceBtn" class="primary">Add to quote</button>
-          <button id="previewBtn" class="primary">Retrieve my quote</button>
-          <button id="resetBtn" class="ghost">Reset</button>
-        </div>
-      </section>
-    </main>
+    <label>Additional Notes</label>
+    <textarea id="custNotes" rows="3"></textarea>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js"></script>
-  <script>
-    // EmailJS credentials
-    const EMAILJS_USER_ID = 'rCNjUdb4qChPXsU34';
-    const EMAILJS_SERVICE_ID = 'service_3mekcch';
-    const EMAILJS_TEMPLATE_ID = 'template_359siqa';
-    const OWNER_EMAIL = 'ryanbyrne1412@gmail.com';
-    if(window.emailjs) emailjs.init(EMAILJS_USER_ID);
+  <!-- SERVICE SELECTION -->
+  <div class="section">
+    <label>Service</label>
+    <select id="serviceSelect">
+      <option value="Socket Installation">Socket Installation - €30</option>
+      <option value="Light Fitting">Light Fitting - €30</option>
+      <option value="Outdoor Socket">Outdoor Socket - €100</option>
+      <option value="Fuseboard Upgrade">Fuseboard Upgrade - €650</option>
+    </select>
 
-    const PRICES = {
-      general:{label:'Assessment / Callout',unit:45},
-      sockets:{label:'Socket (single)',unit:30},
-      lighting:{label:'Light fitting',unit:30},
-      rewire:{label:'Partial rewire (per room)',unit:420},
-      fuse:{label:'Fuseboard upgrade',unit:650},
-      ev:{label:'EV charger (supply & fit)',unit:1200},
-      inspection:{label:'Inspection & certificate',unit:85},
-      custom:{label:'Custom item',unit:0}
-    };
-    const EXTRA_PRICES = {callout:45,certificate:60,weekend:80,smart:35};
-    let allServices=[];
+    <label>Quantity</label>
+    <input id="serviceQty" type="number" value="1" min="1">
 
-    const serviceSelect=document.getElementById('serviceSelect');
-    const dynamicOptions=document.getElementById('dynamicOptions');
-    const extrasList=document.getElementById('extrasList');
-    const notes=document.getElementById('notes');
-    const custName=document.getElementById('custName');
-    const custEmail=document.getElementById('custEmail');
-    const custPhone=document.getElementById('custPhone');
-    const custPost=document.getElementById('custPost');
-    const addServiceBtn=document.getElementById('addServiceBtn');
-    const previewBtn=document.getElementById('previewBtn');
-    const resetBtn=document.getElementById('resetBtn');
-    const liveTotal=document.getElementById('liveTotal');
-    const breakdown=document.getElementById('breakdown');
+    <button onclick="addService()">Add to Quote</button>
+  </div>
 
-    const DISTANCES_KM = {
-      R32:0, D02:100, K:120, T12:45
-    };
+  <!-- BREAKDOWN TABLE -->
+  <table id="breakdownTable" style="display:none;">
+    <thead>
+      <tr>
+        <th>Service</th>
+        <th>Qty</th>
+        <th>Price</th>
+        <th>Subtotal</th>
+      </tr>
+    </thead>
+    <tbody id="breakdownBody"></tbody>
+  </table>
 
-    function getDistanceKm(eircode){
-      const prefix=eircode.replace(/\s+/,'').substring(0,3).toUpperCase();
-      return DISTANCES_KM[prefix] || 50;
-    }
+  <!-- TOTAL PRICE -->
+  <div id="totalDisplay">Total: €0</div>
 
-    function distanceSurcharge(eircode){
-      const km = getDistanceKm(eircode);
-      return Math.floor(km/15)*10;
-    }
+  <!-- BUTTONS -->
+  <div class="bottom-buttons">
+    <button onclick="resetQuote()" style="background:#dc3545;">Reset</button>
+    <button id="sendQuoteBtn">Retrieve My Quote</button>
+  </div>
 
-    function renderDynamicOptions(){
-      const s=serviceSelect.value;
-      dynamicOptions.innerHTML='';
-      if(s==='custom'){
-        dynamicOptions.innerHTML=`<label>Custom item title</label><input id='customTitle' placeholder='e.g. install new consumer unit'><label style='margin-top:10px'>Estimated units / qty</label><input id='customQty' type='number' min='1' value='1'>`;
-      } else {
-        dynamicOptions.innerHTML=`<label>Quantity</label><input id='qty' type='number' min='1' value='1'>`;
-      }
-    }
-    serviceSelect.addEventListener('change',renderDynamicOptions);
-    renderDynamicOptions();
+</div>
 
-    function addService(){
-      const key=serviceSelect.value;
-      const qty=Number(document.getElementById('qty')?.value||document.getElementById('customQty')?.value||1);
-      if(key==='custom'){const title=document.getElementById('customTitle')?.value||'Custom item';PRICES.custom.label=title;}
-      const extras={};
-      extrasList.querySelectorAll('input[type=checkbox]').forEach(cb=>{if(cb.checked) extras[cb.dataset.extra]=true;});
-      let basePrice=(PRICES[key]?.unit||0)*qty;
-      let extrasTotal=0; for(const k in extras) if(EXTRA_PRICES[k]) extrasTotal+=EXTRA_PRICES[k];
-      let smallCount=['sockets','lighting'].includes(key)?qty:0; if(extras.smart) smallCount+=1;
-      let discountPct=smallCount>=5?0.15:smallCount>=3?0.10:0;
-      const discountAmount=Math.round((basePrice+extrasTotal)*discountPct);
-      allServices.push({key,title:PRICES[key]?.label||'Item',qty,extras,price:basePrice,extrasTotal,discount:discountAmount});
-      extrasList.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=false);
-      renderDynamicOptions();
-      updateBreakdown();
-    }
 
-    function updateBreakdown(){
-      if(allServices.length===0){liveTotal.textContent='€0'; breakdown.innerHTML='No items selected yet.'; return;}
-      let total=0;
-      const eircode=custPost.value.trim();
-      const distanceExtra=distanceSurcharge(eircode);
-      const parts=allServices.map((s,idx)=>{
-        const serviceTotal=s.price+s.extrasTotal-s.discount;
-        total+=serviceTotal;
-        const extrasText=Object.keys(s.extras).length?Object.keys(s.extras).join(', '):'None';
-        return `<div><strong>${idx+1}. ${s.title}</strong> x ${s.qty} => €${serviceTotal} ${s.discount>0?`(discount €${s.discount})`:''}<br><small>Extras: ${extrasText}</small></div>`;
-      });
-      total+=distanceExtra;
-      if(distanceExtra>0) parts.push(`<div><strong>Distance surcharge:</strong> €${distanceExtra}</div>`);
-      liveTotal.textContent=`€${total}`;
-      breakdown.innerHTML=parts.join('');
-    }
+<!-- EmailJS SDK v3 (works 100%) -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script>
+  emailjs.init("rCNjUdb4qChPXsU34");
+</script>
 
-    addServiceBtn.addEventListener('click',addService);
-    resetBtn.addEventListener('click',()=>{
-      allServices=[]; renderDynamicOptions(); updateBreakdown(); extrasList.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=false);
-      notes.value=''; custName.value=''; custEmail.value=''; custPhone.value=''; custPost.value='';
-    });
 
-    function buildQuoteHtml(){
-      if(allServices.length===0) return '<div>No services selected.</div>';
-      let eircode=custPost.value.trim();
-      let distanceExtra=distanceSurcharge(eircode);
-      let rows=allServices.map((s,idx)=>{
-        const total=s.price+s.extrasTotal-s.discount;
-        const extrasText=Object.keys(s.extras).length?Object.keys(s.extras).join(', '):'None';
-        return `<tr><td style="padding:6px 8px;border:1px solid #eee">${idx+1}. ${s.title}</td><td style="padding:6px 8px;border:1px solid #eee">${s.qty}</td><td style="padding:6px 8px;border:1px solid #eee">€${total}</td></tr>`;
-      }).join('');
-      const totalAmount=allServices.reduce((acc,s)=>acc+(s.price+s.extrasTotal-s.discount),0)+distanceExtra;
-      const distanceRow=distanceExtra>0?`<tr><td colspan="2" style="padding:6px 8px;border:1px solid #eee"><strong>Distance surcharge</strong></td><td style="padding:6px 8px;border:1px solid #eee"><strong>€${distanceExtra}</strong></td></tr>`:'';
-      return `<table style="border-collapse:collapse;width:100%"><thead><tr><th style="text-align:left;padding:6px 8px;border:1px solid #eee">Item</th><th style="text-align:left;padding:6px 8px;border:1px solid #eee">Qty</th><th style="text-align:left;padding:6px 8px;border:1px solid #eee">Price</th></tr></thead><tbody>${rows}${distanceRow}</tbody><tfoot><tr><td colspan="2" style="padding:6px 8px;border:1px solid #eee"><strong>Total</strong></td><td style="padding:6px 8px;border:1px solid #eee"><strong>€${totalAmount}</strong></td></tr></tfoot></table>`;
-    }
+<script>
+let services = [];
+let servicePrices = {
+  "Socket Installation": 30,
+  "Light Fitting": 25,
+  "Outdoor Socket": 45,
+  "Fuseboard Upgrade": 650
+};
 
-    previewBtn.addEventListener('click',()=>{
-      const name=custName.value.trim(); const email=custEmail.value.trim();
-      if(!name||!email){alert('Please enter your name and email before retrieving the quote.'); return;}
-      if(allServices.length===0){alert('Please add at least one service to the quote before retrieving.'); return;}
-      const itemsHtml=buildQuoteHtml();
-      const totalAmount=allServices.reduce((acc,s)=>acc+(s.price+s.extrasTotal-s.discount),0)+distanceSurcharge(custPost.value.trim());
-      const templateParams={
-        biz_name:'Leinster Electrics',
-        to_name:name,
-        to_email:email,
-        owner_email:OWNER_EMAIL,
-        items_html:itemsHtml,
-        total:`€${totalAmount}`,
-        notes:notes.value||'',
-        property_type:document.getElementById('propertyType').value,
-        phone:custPhone.value||'',
-        postcode:custPost.value||''
-      };
-      emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID,templateParams)
-        .then(()=> emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID,Object.assign({},templateParams,{to_email:OWNER_EMAIL,to_name:'Business Owner'})))
-        .then(()=> alert('Quote sent successfully to customer and business owner!'))
-        .catch(err=>{console.error(err);alert('Failed to send quote. Check console.');});
-    });
-  </script>
+/* ---- Distance lookup for Eircode ---- */
+function calculateDistance(eircode) {
+  if (!eircode) return 0;
+
+  const routing = eircode.substring(0,3).toUpperCase();
+
+  const distanceMap = {
+    "R32": 0, "R35": 10, "R14": 12, "R56": 20,
+    "W91": 25, "N91": 30, "R42": 28, "R93": 40,
+    "W34": 45, "T23": 120, "D01": 100
+  };
+
+  if (distanceMap[routing] !== undefined) {
+    return distanceMap[routing];
+  }
+
+  return 40; 
+}
+
+function addService() {
+  let name = document.getElementById("serviceSelect").value;
+  let qty = parseInt(document.getElementById("serviceQty").value);
+
+  services.push({
+    name: name,
+    qty: qty,
+    price: servicePrices[name],
+    subtotal: qty * servicePrices[name]
+  });
+
+  updateBreakdown();
+}
+
+function updateBreakdown() {
+  let tbody = document.getElementById("breakdownBody");
+  tbody.innerHTML = "";
+
+  let total = 0;
+
+  services.forEach(item => {
+    total += item.subtotal;
+
+    tbody.innerHTML += `
+      <tr>
+        <td>${item.name}</td>
+        <td>${item.qty}</td>
+        <td>€${item.price}</td>
+        <td>€${item.subtotal}</td>
+      </tr>
+    `;
+  });
+
+  let eircode = document.getElementById("custEircode").value;
+  let distanceKm = calculateDistance(eircode);
+  let surchargeUnits = Math.floor(distanceKm / 15);
+  let surcharge = surchargeUnits * 10;
+
+  if (surcharge > 0) {
+    tbody.innerHTML += `
+      <tr>
+        <td>Distance Surcharge</td>
+        <td>-</td>
+        <td>€10 / 15km</td>
+        <td>€${surcharge}</td>
+      </tr>
+    `;
+  }
+
+  total += surcharge;
+
+  document.getElementById("breakdownTable").style.display = "table";
+  document.getElementById("totalDisplay").innerHTML = `Total: €${total}`;
+}
+
+function resetQuote() {
+  services = [];
+  document.getElementById("breakdownBody").innerHTML = "";
+  document.getElementById("breakdownTable").style.display = "none";
+  document.getElementById("totalDisplay").innerHTML = "Total: €0";
+}
+
+/* ---- SEND QUOTE ---- */
+document.getElementById("sendQuoteBtn").addEventListener("click", function() {
+
+  if (services.length === 0) {
+    alert("Please add at least one service.");
+    return;
+  }
+
+  let custName = document.getElementById("custName").value;
+  let custEmail = document.getElementById("custEmail").value;
+  let custPhone = document.getElementById("custPhone").value;
+  let custEircode = document.getElementById("custEircode").value;
+  let custType = document.getElementById("custType").value;
+  let notes = document.getElementById("custNotes").value;
+  let total = document.getElementById("totalDisplay").innerText.replace("Total: €","");
+
+  let rows = document.getElementById("breakdownBody").innerHTML;
+
+  let templateParams = {
+    to_name: custName,
+    to_email: custEmail,
+    owner_email: "ryanbyrne1412@gmail.com",
+    items_html: rows,
+    total: total,
+    phone: custPhone,
+    eircode: custEircode,
+    property_type: custType,
+    notes: notes
+  };
+
+  emailjs.send("service_3mekcch", "template_359siqa", templateParams)
+  .then(function() {
+    alert("Quote sent successfully!");
+  }, function(error) {
+    console.error("EmailJS Error:", error);
+    alert("Failed to send quote.");
+  });
+});
+</script>
+
 </body>
 </html>
