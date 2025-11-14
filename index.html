@@ -25,8 +25,7 @@
     h1{margin:0;font-size:22px}
     p.lead{margin:6px 0 20px;color:var(--muted)}
 
-    .grid{display:grid;grid-template-columns:1fr 380px;gap:20px}
-    @media (max-width:980px){.grid{grid-template-columns:1fr}}
+    .grid{display:grid;grid-template-columns:1fr;gap:20px}
 
     .card{background:var(--card);padding:18px;border-radius:var(--radius);box-shadow:0 6px 18px rgba(11,18,32,0.04)}
     label{display:block;font-size:13px;color:var(--muted);margin-bottom:8px}
@@ -34,23 +33,15 @@
     .row{display:flex;gap:12px}
     .row > *{flex:1}
 
-    .services-list{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
-    .service{background:#fbfdfa;padding:12px;border-radius:10px;border:1px solid #eef7ee}
-    .service label{display:flex;align-items:center;gap:8px;margin:0}
-    .price{font-weight:700;color:var(--brand-1)}
-
-    .summary{position:relative;margin-top:12px;display:flex;align-items:center;gap:10px}
+    .summary{margin-top:12px;display:flex;align-items:center;gap:10px}
     .total{font-size:28px;font-weight:900;margin:0}
     .muted{color:var(--muted);font-size:13px}
     button.primary{background:linear-gradient(90deg,var(--brand-1),#1e7f2f);color:#fff;padding:12px 18px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
     button.ghost{background:transparent;border:1px solid #e6eef3;padding:10px 14px;border-radius:10px;cursor:pointer}
 
-    footer{margin-top:20px;color:var(--muted);font-size:13px;text-align:center}
-
     .watermark{position:absolute;right:-40px;top:120px;opacity:0.06;font-size:160px;font-weight:900;color:var(--brand-1);transform:rotate(-20deg);pointer-events:none}
 
-    .contact{font-weight:700}
-    .muted-block{color:var(--muted);font-size:13px}
+    .small{font-size:13px;color:var(--muted)}
   </style>
 </head>
 <body>
@@ -65,7 +56,7 @@
 
     <div class="watermark">ELECTRIC</div>
 
-    <main class="grid" role="main">
+    <main role="main">
       <section class="card">
         <h2 style="margin-top:0">Build your quote</h2>
 
@@ -92,12 +83,12 @@
 
         <div style="margin-top:12px">
           <label for="custName">Your name</label>
-          <input id="custName" type="text" placeholder="Full name">
+          <input id="custName" type="text" placeholder="Full name" required>
         </div>
 
         <div style="margin-top:12px">
           <label for="custEmail">Your email</label>
-          <input id="custEmail" type="email" placeholder="you@example.com">
+          <input id="custEmail" type="email" placeholder="you@example.com" required>
         </div>
 
         <div style="margin-top:12px">
@@ -129,7 +120,6 @@
     </main>
   </div>
 
-  <!-- EmailJS and Script -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script>
     emailjs.init("rCNjUdb4qChPXsU34");
@@ -164,9 +154,9 @@
     renderDynamicOptions();
 
     function calculateDistanceSurcharge(eircode){
-      // Placeholder distance logic: 0 if <=20km, else €10 per 15km
       if(!eircode) return 0;
-      let distanceKm = 25; // Replace with real calculation
+      // Placeholder for real distance calculation from Mountmellick
+      let distanceKm = 25; // example distance, replace with real lookup if needed
       if(distanceKm <= 20) return 0;
       return Math.ceil((distanceKm-20)/15)*10;
     }
@@ -177,7 +167,12 @@
       let basePrice = (PRICES[key]||0)*qty;
       let distanceSurcharge = calculateDistanceSurcharge(custEircode.value);
 
-      allServices.push({key, qty, price: basePrice, distanceSurcharge});
+      allServices.push({
+        key,
+        qty,
+        price: basePrice,
+        distanceSurcharge
+      });
       updateBreakdown();
     }
 
@@ -194,26 +189,46 @@
     }
 
     addServiceBtn.addEventListener('click', addService);
+
     resetBtn.addEventListener('click', ()=>{
-      allServices=[]; renderDynamicOptions(); updateBreakdown(); notes.value=''; custName.value=''; custEmail.value=''; custPhone.value=''; custEircode.value='';
+      allServices=[]; renderDynamicOptions(); updateBreakdown();
+      notes.value=''; custName.value=''; custEmail.value=''; custPhone.value=''; custEircode.value='';
     });
 
     previewBtn.addEventListener('click', ()=>{
-      if(allServices.length===0){alert("Add at least one service"); return;}
+      if(allServices.length === 0){
+        alert("Add at least one service");
+        return;
+      }
+
+      if(!custEmail.value){
+        alert("Please enter a valid email");
+        return;
+      }
+
+      const rows = breakdown.innerHTML;
+      const total = liveTotal.textContent.replace('€','');
       const templateParams = {
-        to_name: custName.value,
+        to_name: custName.value || "Customer",
         to_email: custEmail.value,
         owner_email: "ryanbyrne1412@gmail.com",
-        items_html: breakdown.innerHTML,
-        total: liveTotal.textContent.replace('€',''),
+        items_html: rows,
+        total: total,
         phone: custPhone.value,
         eircode: custEircode.value,
         property_type: propertyType.value,
         notes: notes.value
       };
+
+      console.log(templateParams);
+
       emailjs.send("service_3mekcch","template_359siqa",templateParams)
-        .then(()=>{alert("Quote sent successfully!");})
-        .catch(err=>{console.error(err); alert("Failed to send quote, check console.");});
+        .then(()=>{
+          alert("Quote sent successfully!");
+        },(err)=>{
+          console.error(err);
+          alert("Failed to send quote, check console.");
+        });
     });
   </script>
 </body>
