@@ -120,121 +120,125 @@
     </main>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  <script>
-    emailjs.init("rCNjUdb4qChPXsU34");
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script>
+emailjs.init("rCNjUdb4qChPXsU34");
 
-    const serviceSelect = document.getElementById('serviceSelect');
-    const dynamicOptions = document.getElementById('dynamicOptions');
-    const propertyType = document.getElementById('propertyType');
-    const notes = document.getElementById('notes');
-    const custName = document.getElementById('custName');
-    const custEmail = document.getElementById('custEmail');
-    const custPhone = document.getElementById('custPhone');
-    const custEircode = document.getElementById('custEircode');
-    const addServiceBtn = document.getElementById('addServiceBtn');
-    const previewBtn = document.getElementById('previewBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const liveTotal = document.getElementById('liveTotal');
-    const breakdown = document.getElementById('breakdown');
+const serviceSelect = document.getElementById('serviceSelect');
+const dynamicOptions = document.getElementById('dynamicOptions');
+const propertyType = document.getElementById('propertyType');
+const notes = document.getElementById('notes');
+const custName = document.getElementById('custName');
+const custEmail = document.getElementById('custEmail');
+const custPhone = document.getElementById('custPhone');
+const custEircode = document.getElementById('custEircode');
+const addServiceBtn = document.getElementById('addServiceBtn');
+const previewBtn = document.getElementById('previewBtn');
+const resetBtn = document.getElementById('resetBtn');
+const liveTotal = document.getElementById('liveTotal');
+const breakdown = document.getElementById('breakdown');
 
-    const PRICES = {
-      "Socket Installation":30,
-      "Lighting":30,
-      "Fuseboard":650,
-      "Outdoor Socket":100
-    };
+const PRICES = {
+  "Socket Installation":30,
+  "Lighting":30,
+  "Fuseboard":650,
+  "Outdoor Socket":100
+};
 
-    let allServices = [];
+let allServices = [];
 
-    function renderDynamicOptions(){
-      dynamicOptions.innerHTML = "<label>Quantity</label><input id='qty' type='number' min='1' value='1'>";
-    }
-    serviceSelect.addEventListener('change', renderDynamicOptions);
-    renderDynamicOptions();
+function renderDynamicOptions(){
+  dynamicOptions.innerHTML = "<label>Quantity</label><input id='qty' type='number' min='1' value='1'>";
+}
+serviceSelect.addEventListener('change', renderDynamicOptions);
+renderDynamicOptions();
 
-    function calculateDistanceSurcharge(eircode){
-      if(!eircode) return 0;
-      let distanceKm = 25; // example placeholder
-      if(distanceKm <= 20) return 0;
-      return Math.ceil((distanceKm-20)/15)*10;
-    }
+function calculateDistanceSurcharge(eircode){
+  if(!eircode) return 0;
+  let distanceKm = 25; // Example distance
+  if(distanceKm <= 20) return 0;
+  return Math.ceil((distanceKm-20)/15)*10;
+}
 
-    function addService(){
-      const key = serviceSelect.value;
-      const qty = Number(document.getElementById('qty').value || 1);
-      let basePrice = (PRICES[key]||0)*qty;
-      let distanceSurcharge = calculateDistanceSurcharge(custEircode.value);
+function addService(){
+  const key = serviceSelect.value;
+  const qty = Number(document.getElementById('qty').value || 1);
+  let basePrice = (PRICES[key]||0)*qty;
+  allServices.push({ key, qty, price: basePrice });
+  updateBreakdown();
+}
 
-      // Discount logic
-      let smallCount = ['Socket Installation','Lighting'].includes(key) ? qty : 0;
-      let discountPct = smallCount >=5 ? 0.15 : smallCount >=3 ? 0.10 : 0;
-      const discountAmount = Math.round(basePrice * discountPct);
+function updateBreakdown(){
+  if(allServices.length===0){
+    liveTotal.textContent='€0';
+    breakdown.innerHTML='No items selected yet.';
+    return;
+  }
 
-      allServices.push({
-        key,
-        qty,
-        price: basePrice,
-        distanceSurcharge,
-        discount: discountAmount
-      });
-      updateBreakdown();
-    }
+  let total=0;
+  breakdown.innerHTML="";
+  allServices.forEach(s=>{
+    total += s.price;
+    breakdown.innerHTML+=`${s.key} x ${s.qty} => €${s.price}<br>`;
+  });
 
-    function updateBreakdown(){
-      if(allServices.length===0){liveTotal.textContent='€0'; breakdown.innerHTML='No items selected yet.'; return;}
-      let total=0;
-      const rows = allServices.map(s=>{
-        const serviceTotal = s.price + s.distanceSurcharge - s.discount;
-        total += serviceTotal;
-        return `${s.key} x ${s.qty} => €${serviceTotal}${s.distanceSurcharge>0?` (Distance surcharge €${s.distanceSurcharge})`:''}${s.discount>0?` (Discount €${s.discount})`:''}`;
-      });
-      breakdown.innerHTML = rows.join('<br>');
-      liveTotal.textContent=`€${total}`;
-      return rows.join('\n'); // for email plain text
-    }
+  const itemCount = allServices.reduce((sum,s)=>sum+s.qty,0);
+  let discountRate = 0;
+  if(itemCount >= 5) discountRate = 0.15;
+  else if(itemCount >= 3) discountRate = 0.10;
+  let discountAmount = total * discountRate;
+  total = total - discountAmount;
 
-    addServiceBtn.addEventListener('click', addService);
+  const distanceSurcharge = calculateDistanceSurcharge(custEircode.value);
+  total += distanceSurcharge;
 
-    resetBtn.addEventListener('click', ()=>{
-      allServices=[]; renderDynamicOptions(); updateBreakdown();
-      notes.value=''; custName.value=''; custEmail.value=''; custPhone.value=''; custEircode.value='';
-    });
+  if(discountAmount>0) breakdown.innerHTML+=`<br>Discount (${discountRate*100}%): -€${discountAmount.toFixed(2)}<br>`;
+  if(distanceSurcharge>0) breakdown.innerHTML+=`Distance surcharge: €${distanceSurcharge}<br>`;
 
-    previewBtn.addEventListener('click', ()=>{
-      if(allServices.length === 0){
-        alert("Add at least one service");
-        return;
-      }
-      if(!custEmail.value){
-        alert("Please enter a valid email");
-        return;
-      }
+  liveTotal.textContent=`€${total.toFixed(2)}`;
+}
 
-      const rows = updateBreakdown();
-      const total = liveTotal.textContent.replace('€','');
-      const templateParams = {
-        to_name: custName.value || "Customer",
-        to_email: custEmail.value,
-        owner_email: "ryanbyrne1412@gmail.com",
-        items_html: rows,
-        total: total,
-        phone: custPhone.value,
-        eircode: custEircode.value,
-        property_type: propertyType.value,
-        notes: notes.value
-      };
+addServiceBtn.addEventListener('click', addService);
 
-      console.log(templateParams);
+resetBtn.addEventListener('click', ()=>{
+  allServices=[]; renderDynamicOptions(); updateBreakdown();
+  notes.value=''; custName.value=''; custEmail.value=''; custPhone.value=''; custEircode.value='';
+});
 
-      emailjs.send("service_3mekcch","template_359siqa",templateParams)
-        .then(()=>{
-          alert("Quote sent successfully!");
-        },(err)=>{
-          console.error(err); 
-          alert("Failed to send quote, check console.");
-        });
-    });
-  </script>
+previewBtn.addEventListener('click', ()=>{
+  if(allServices.length===0){
+    alert("Add at least one service");
+    return;
+  }
+  if(!custEmail.value){
+    alert("Please enter a valid email");
+    return;
+  }
+
+  const rows = breakdown.innerHTML.replace(/<br>/g,'<br>'); // Keep <br> formatting
+  const total = liveTotal.textContent.replace('€','');
+  const templateParams = {
+    to_name: custName.value || "Customer",
+    to_email: custEmail.value,
+    owner_email: "ryanbyrne1412@gmail.com",
+    items_html: rows,
+    total: total,
+    phone: custPhone.value,
+    eircode: custEircode.value,
+    property_type: propertyType.value,
+    notes: notes.value
+  };
+
+  // Send to customer
+  emailjs.send("service_3mekcch","template_359siqa",templateParams)
+    .then(()=>{ console.log("Email sent to customer"); }, 
+          (err)=>{ console.error(err); alert("Failed to send quote."); });
+
+  // Send copy to owner
+  emailjs.send("service_3mekcch","template_359siqa",{...templateParams, to_email:"ryanbyrne1412@gmail.com"})
+    .then(()=>{ console.log("Copy sent to owner"); }, 
+          (err)=>{ console.error(err); });
+});
+</script>
 </body>
 </html>
