@@ -141,9 +141,9 @@
     </main>
   </div>
 
-  <!-- EmailJS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js"></script>
   <script>
+    // EmailJS credentials
     const EMAILJS_USER_ID = 'rCNjUdb4qChPXsU34';
     const EMAILJS_SERVICE_ID = 'service_3mekcch';
     const EMAILJS_TEMPLATE_ID = 'template_359siqa';
@@ -177,49 +177,43 @@
     const liveTotal=document.getElementById('liveTotal');
     const breakdown=document.getElementById('breakdown');
 
-    // Example: approximate distance from Mountmellick by Eircode prefix
     const DISTANCES_KM = {
-      R32: 0, // Mountmellick itself
-      D02: 100,
-      K: 120,
-      T12: 45,
-      // Add more prefixes as needed
+      R32:0, D02:100, K:120, T12:45
     };
 
     function getDistanceKm(eircode){
-      const prefix = eircode.replace(/\s+/,'').substring(0,3).toUpperCase();
-      return DISTANCES_KM[prefix] || 50; // default 50km if unknown
+      const prefix=eircode.replace(/\s+/,'').substring(0,3).toUpperCase();
+      return DISTANCES_KM[prefix] || 50;
     }
 
     function distanceSurcharge(eircode){
       const km = getDistanceKm(eircode);
-      const extraUnits = Math.floor(km / 15);
-      return extraUnits*10;
+      return Math.floor(km/15)*10;
     }
 
     function renderDynamicOptions(){
-      const s = serviceSelect.value;
-      dynamicOptions.innerHTML = '';
+      const s=serviceSelect.value;
+      dynamicOptions.innerHTML='';
       if(s==='custom'){
-        dynamicOptions.innerHTML = `<label>Custom item title</label><input id='customTitle' placeholder='e.g. install new consumer unit'><label style='margin-top:10px'>Estimated units / qty</label><input id='customQty' type='number' min='1' value='1'>`;
+        dynamicOptions.innerHTML=`<label>Custom item title</label><input id='customTitle' placeholder='e.g. install new consumer unit'><label style='margin-top:10px'>Estimated units / qty</label><input id='customQty' type='number' min='1' value='1'>`;
       } else {
-        dynamicOptions.innerHTML = `<label>Quantity</label><input id='qty' type='number' min='1' value='1'>`;
+        dynamicOptions.innerHTML=`<label>Quantity</label><input id='qty' type='number' min='1' value='1'>`;
       }
     }
-    serviceSelect.addEventListener('change', renderDynamicOptions);
+    serviceSelect.addEventListener('change',renderDynamicOptions);
     renderDynamicOptions();
 
     function addService(){
-      const key = serviceSelect.value;
-      const qty = Number(document.getElementById('qty')?.value || document.getElementById('customQty')?.value || 1);
+      const key=serviceSelect.value;
+      const qty=Number(document.getElementById('qty')?.value||document.getElementById('customQty')?.value||1);
       if(key==='custom'){const title=document.getElementById('customTitle')?.value||'Custom item';PRICES.custom.label=title;}
-      const extras = {};
+      const extras={};
       extrasList.querySelectorAll('input[type=checkbox]').forEach(cb=>{if(cb.checked) extras[cb.dataset.extra]=true;});
-      let basePrice = (PRICES[key]?.unit||0)*qty;
+      let basePrice=(PRICES[key]?.unit||0)*qty;
       let extrasTotal=0; for(const k in extras) if(EXTRA_PRICES[k]) extrasTotal+=EXTRA_PRICES[k];
-      let smallCount = ['sockets','lighting'].includes(key)?qty:0; if(extras.smart) smallCount+=1;
-      let discountPct = smallCount>=5?0.15:smallCount>=3?0.10:0;
-      const discountAmount = Math.round((basePrice+extrasTotal)*discountPct);
+      let smallCount=['sockets','lighting'].includes(key)?qty:0; if(extras.smart) smallCount+=1;
+      let discountPct=smallCount>=5?0.15:smallCount>=3?0.10:0;
+      const discountAmount=Math.round((basePrice+extrasTotal)*discountPct);
       allServices.push({key,title:PRICES[key]?.label||'Item',qty,extras,price:basePrice,extrasTotal,discount:discountAmount});
       extrasList.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=false);
       renderDynamicOptions();
@@ -229,64 +223,60 @@
     function updateBreakdown(){
       if(allServices.length===0){liveTotal.textContent='€0'; breakdown.innerHTML='No items selected yet.'; return;}
       let total=0;
-      const eircode = custPost.value.trim();
-      const distanceExtra = distanceSurcharge(eircode);
+      const eircode=custPost.value.trim();
+      const distanceExtra=distanceSurcharge(eircode);
       const parts=allServices.map((s,idx)=>{
-        const serviceTotal = s.price+s.extrasTotal-s.discount;
+        const serviceTotal=s.price+s.extrasTotal-s.discount;
         total+=serviceTotal;
-        const extrasText = Object.keys(s.extras).length ? Object.keys(s.extras).join(', ') : 'None';
+        const extrasText=Object.keys(s.extras).length?Object.keys(s.extras).join(', '):'None';
         return `<div><strong>${idx+1}. ${s.title}</strong> x ${s.qty} => €${serviceTotal} ${s.discount>0?`(discount €${s.discount})`:''}<br><small>Extras: ${extrasText}</small></div>`;
       });
-      total += distanceExtra;
+      total+=distanceExtra;
       if(distanceExtra>0) parts.push(`<div><strong>Distance surcharge:</strong> €${distanceExtra}</div>`);
       liveTotal.textContent=`€${total}`;
-      breakdown.innerHTML = parts.join('');
+      breakdown.innerHTML=parts.join('');
     }
 
-    addServiceBtn.addEventListener('click', addService);
-    resetBtn.addEventListener('click', ()=>{
+    addServiceBtn.addEventListener('click',addService);
+    resetBtn.addEventListener('click',()=>{
       allServices=[]; renderDynamicOptions(); updateBreakdown(); extrasList.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=false);
       notes.value=''; custName.value=''; custEmail.value=''; custPhone.value=''; custPost.value='';
     });
 
     function buildQuoteHtml(){
       if(allServices.length===0) return '<div>No services selected.</div>';
-      let eircode = custPost.value.trim();
-      let distanceExtra = distanceSurcharge(eircode);
-      let rows = allServices.map((s,idx)=>{
-        const total = s.price+s.extrasTotal-s.discount;
-        const extrasText = Object.keys(s.extras).length ? Object.keys(s.extras).join(', ') : 'None';
+      let eircode=custPost.value.trim();
+      let distanceExtra=distanceSurcharge(eircode);
+      let rows=allServices.map((s,idx)=>{
+        const total=s.price+s.extrasTotal-s.discount;
+        const extrasText=Object.keys(s.extras).length?Object.keys(s.extras).join(', '):'None';
         return `<tr><td style="padding:6px 8px;border:1px solid #eee">${idx+1}. ${s.title}</td><td style="padding:6px 8px;border:1px solid #eee">${s.qty}</td><td style="padding:6px 8px;border:1px solid #eee">€${total}</td></tr>`;
       }).join('');
-      const total = allServices.reduce((acc,s)=>acc+(s.price+s.extrasTotal-s.discount),0)+distanceExtra;
-      let distanceRow = distanceExtra>0?`<tr><td colspan="2" style="padding:6px 8px;border:1px solid #eee"><strong>Distance surcharge</strong></td><td style="padding:6px 8px;border:1px solid #eee"><strong>€${distanceExtra}</strong></td></tr>`:'';
-      return `<table style="border-collapse:collapse;width:100%"><thead><tr><th style="text-align:left;padding:6px 8px;border:1px solid #eee">Item</th><th style="text-align:left;padding:6px 8px;border:1px solid #eee">Qty</th><th style="text-align:left;padding:6px 8px;border:1px solid #eee">Price</th></tr></thead><tbody>${rows}${distanceRow}</tbody><tfoot><tr><td colspan="2" style="padding:6px 8px;border:1px solid #eee"><strong>Total</strong></td><td style="padding:6px 8px;border:1px solid #eee"><strong>€${total}</strong></td></tr></tfoot></table>`;
+      const totalAmount=allServices.reduce((acc,s)=>acc+(s.price+s.extrasTotal-s.discount),0)+distanceExtra;
+      const distanceRow=distanceExtra>0?`<tr><td colspan="2" style="padding:6px 8px;border:1px solid #eee"><strong>Distance surcharge</strong></td><td style="padding:6px 8px;border:1px solid #eee"><strong>€${distanceExtra}</strong></td></tr>`:'';
+      return `<table style="border-collapse:collapse;width:100%"><thead><tr><th style="text-align:left;padding:6px 8px;border:1px solid #eee">Item</th><th style="text-align:left;padding:6px 8px;border:1px solid #eee">Qty</th><th style="text-align:left;padding:6px 8px;border:1px solid #eee">Price</th></tr></thead><tbody>${rows}${distanceRow}</tbody><tfoot><tr><td colspan="2" style="padding:6px 8px;border:1px solid #eee"><strong>Total</strong></td><td style="padding:6px 8px;border:1px solid #eee"><strong>€${totalAmount}</strong></td></tr></tfoot></table>`;
     }
 
-    previewBtn.addEventListener('click', ()=>{
+    previewBtn.addEventListener('click',()=>{
       const name=custName.value.trim(); const email=custEmail.value.trim();
       if(!name||!email){alert('Please enter your name and email before retrieving the quote.'); return;}
       if(allServices.length===0){alert('Please add at least one service to the quote before retrieving.'); return;}
-      const itemsHtml = buildQuoteHtml();
-      const total = allServices.reduce((acc,s)=>acc+(s.price+s.extrasTotal-s.discount),0)+distanceSurcharge(custPost.value.trim());
-      const templateParams = {
-        biz_name: 'Leinster Electrics',
-        to_name: name,
-        to_email: email,
-        owner_email: OWNER_EMAIL,
-        items_html: itemsHtml,
-        total: `€${total}`,
-        notes: notes.value||'',
-        property_type: document.getElementById('propertyType').value,
-        phone: custPhone.value||'',
-        postcode: custPost.value||''
+      const itemsHtml=buildQuoteHtml();
+      const totalAmount=allServices.reduce((acc,s)=>acc+(s.price+s.extrasTotal-s.discount),0)+distanceSurcharge(custPost.value.trim());
+      const templateParams={
+        biz_name:'Leinster Electrics',
+        to_name:name,
+        to_email:email,
+        owner_email:OWNER_EMAIL,
+        items_html:itemsHtml,
+        total:`€${totalAmount}`,
+        notes:notes.value||'',
+        property_type:document.getElementById('propertyType').value,
+        phone:custPhone.value||'',
+        postcode:custPost.value||''
       };
-      if(!window.emailjs){alert('EmailJS not loaded.'); return;}
-      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
-        .then(()=> {
-          const ownerParams = Object.assign({}, templateParams, {to_email: OWNER_EMAIL, to_name:'Business Owner'});
-          return emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, ownerParams);
-        })
+      emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID,templateParams)
+        .then(()=> emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID,Object.assign({},templateParams,{to_email:OWNER_EMAIL,to_name:'Business Owner'})))
         .then(()=> alert('Quote sent successfully to customer and business owner!'))
         .catch(err=>{console.error(err);alert('Failed to send quote. Check console.');});
     });
