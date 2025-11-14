@@ -4,75 +4,72 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Leinster Sparky Quote System</title>
-
   <style>
     body {
       font-family: Arial, sans-serif;
-      background:#f4f4f4;
-      margin:0;
-      padding:20px;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 20px;
     }
-    h2 { margin-top:0; }
+    h2 { margin-top: 0; }
     .container {
-      max-width:900px;
-      margin:0 auto;
-      background:white;
-      padding:20px;
-      border-radius:10px;
-      box-shadow:0 0 10px rgba(0,0,0,0.1);
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
     .section {
-      margin-bottom:20px;
-      padding-bottom:10px;
-      border-bottom:1px solid #ddd;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ddd;
     }
-    label { display:block; margin-top:10px; font-weight:bold; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
     select, input, textarea, button {
-      width:100%;
-      padding:10px;
-      margin-top:5px;
-      border-radius:5px;
-      border:1px solid #ccc;
-      font-size:16px;
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 16px;
     }
     button {
-      cursor:pointer;
-      background:#007bff;
-      color:white;
-      border:none;
-      margin-top:15px;
+      cursor: pointer;
+      background: #007bff;
+      color: white;
+      border: none;
+      margin-top: 15px;
     }
-    button:hover { opacity:0.9; }
+    button:hover { opacity: 0.9; }
     table {
-      width:100%;
-      border-collapse:collapse;
-      margin-top:20px;
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
     }
     table, th, td {
-      border:1px solid #ccc;
+      border: 1px solid #ccc;
     }
     th, td {
-      padding:10px;
-      text-align:left;
+      padding: 10px;
+      text-align: left;
     }
     #totalDisplay {
-      font-size:20px;
-      font-weight:bold;
-      margin-top:15px;
+      font-size: 20px;
+      font-weight: bold;
+      margin-top: 15px;
     }
     .bottom-buttons {
-      display:flex;
-      justify-content:space-between;
-      gap:20px;
-      margin-top:20px;
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      margin-top: 20px;
     }
   </style>
 </head>
-
 <body>
 
 <div class="container">
-
   <h2>Leinster Sparky Instant Quote</h2>
 
   <!-- CUSTOMER DETAILS -->
@@ -104,9 +101,9 @@
   <div class="section">
     <label>Service</label>
     <select id="serviceSelect">
-      <option value="Socket Installation">Socket Installation - €30</option>
-      <option value="Light Fitting">Light Fitting - €30</option>
       <option value="Outdoor Socket">Outdoor Socket - €100</option>
+      <option value="Socket Installation">Socket Installation - €30</option>
+      <option value="Light Fitting">Light Fitting - €25</option>
       <option value="Fuseboard Upgrade">Fuseboard Upgrade - €650</option>
     </select>
 
@@ -137,43 +134,37 @@
     <button onclick="resetQuote()" style="background:#dc3545;">Reset</button>
     <button id="sendQuoteBtn">Retrieve My Quote</button>
   </div>
-
 </div>
 
-
-<!-- EmailJS SDK v3 (works 100%) -->
+<!-- EmailJS v3 -->
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 <script>
   emailjs.init("rCNjUdb4qChPXsU34");
 </script>
 
-
 <script>
 let services = [];
 let servicePrices = {
+  "Outdoor Socket": 100,
   "Socket Installation": 30,
   "Light Fitting": 25,
-  "Outdoor Socket": 45,
   "Fuseboard Upgrade": 650
 };
 
-/* ---- Distance lookup for Eircode ---- */
+/* ---- Distance calculation for Eircode ---- */
 function calculateDistance(eircode) {
   if (!eircode) return 0;
 
-  const routing = eircode.substring(0,3).toUpperCase();
-
+  // Only simple first 3 letters used
+  const prefix = eircode.substring(0,3).toUpperCase();
   const distanceMap = {
-    "R32": 0, "R35": 10, "R14": 12, "R56": 20,
+    "R32": 10, "R35": 12, "R14": 15, "R56": 20,
     "W91": 25, "N91": 30, "R42": 28, "R93": 40,
     "W34": 45, "T23": 120, "D01": 100
   };
 
-  if (distanceMap[routing] !== undefined) {
-    return distanceMap[routing];
-  }
-
-  return 40; 
+  let distance = distanceMap[prefix] !== undefined ? distanceMap[prefix] : 40;
+  return distance;
 }
 
 function addService() {
@@ -195,10 +186,8 @@ function updateBreakdown() {
   tbody.innerHTML = "";
 
   let total = 0;
-
   services.forEach(item => {
     total += item.subtotal;
-
     tbody.innerHTML += `
       <tr>
         <td>${item.name}</td>
@@ -209,12 +198,15 @@ function updateBreakdown() {
     `;
   });
 
+  // Distance surcharge: first 20km free
   let eircode = document.getElementById("custEircode").value;
   let distanceKm = calculateDistance(eircode);
-  let surchargeUnits = Math.floor(distanceKm / 15);
-  let surcharge = surchargeUnits * 10;
+  let surcharge = 0;
 
-  if (surcharge > 0) {
+  if (distanceKm > 20) {
+    let extraKm = distanceKm - 20;
+    let units = Math.ceil(extraKm / 15);
+    surcharge = units * 10;
     tbody.innerHTML += `
       <tr>
         <td>Distance Surcharge</td>
@@ -240,7 +232,6 @@ function resetQuote() {
 
 /* ---- SEND QUOTE ---- */
 document.getElementById("sendQuoteBtn").addEventListener("click", function() {
-
   if (services.length === 0) {
     alert("Please add at least one service.");
     return;
@@ -269,12 +260,12 @@ document.getElementById("sendQuoteBtn").addEventListener("click", function() {
   };
 
   emailjs.send("service_3mekcch", "template_359siqa", templateParams)
-  .then(function() {
-    alert("Quote sent successfully!");
-  }, function(error) {
-    console.error("EmailJS Error:", error);
-    alert("Failed to send quote.");
-  });
+    .then(function() {
+      alert("Quote sent successfully!");
+    }, function(error) {
+      console.error("EmailJS Error:", error);
+      alert("Failed to send quote. Check console for details.");
+    });
 });
 </script>
 
