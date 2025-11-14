@@ -39,7 +39,7 @@
     .service label{display:flex;align-items:center;gap:8px;margin:0}
     .price{font-weight:700;color:var(--brand-1)}
 
-    .summary{position:relative;margin-top:20px}
+    .summary{position:relative;margin-top:12px;display:flex;align-items:center;gap:10px}
     .total{font-size:28px;font-weight:900;margin:0}
     .muted{color:var(--muted);font-size:13px}
     button.primary{background:linear-gradient(90deg,var(--brand-1),#1e7f2f);color:#fff;padding:12px 18px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
@@ -59,8 +59,6 @@
 
     .contact{font-weight:700}
     .muted-block{color:var(--muted);font-size:13px}
-
-    .bottom-row{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap;}
   </style>
 </head>
 <body>
@@ -82,10 +80,10 @@
         <div>
           <label for="serviceSelect">Main service</label>
           <select id="serviceSelect">
-            <option value="Outdoor Socket">Outdoor Socket</option>
             <option value="Socket Installation">Socket Installation</option>
             <option value="Lighting">Light fitting or replacement</option>
             <option value="Fuseboard">Fuseboard upgrade</option>
+            <option value="Outdoor Socket">Outdoor Socket</option>
           </select>
         </div>
 
@@ -125,7 +123,7 @@
           <textarea id="notes" rows="3" placeholder="Any additional notes"></textarea>
         </div>
 
-        <div class="bottom-row">
+        <div style="margin-top:12px" class="row">
           <button id="addServiceBtn" class="primary">Add to quote</button>
           <button id="previewBtn" class="primary">Retrieve My Quote</button>
           <div class="summary">
@@ -158,27 +156,25 @@
     const breakdown = document.getElementById('breakdown');
 
     const PRICES = {
-      "Outdoor Socket":100,
       "Socket Installation":30,
       "Lighting":30,
-      "Fuseboard":650
+      "Fuseboard":650,
+      "Outdoor Socket":100
     };
 
     let allServices = [];
 
     function renderDynamicOptions(){
-      const s = serviceSelect.value;
-      dynamicOptions.innerHTML=`<label>Quantity</label><input id='qty' type='number' min='1' value='1'>`;
+      dynamicOptions.innerHTML = "<label>Quantity</label><input id='qty' type='number' min='1' value='1'>";
     }
     serviceSelect.addEventListener('change', renderDynamicOptions);
     renderDynamicOptions();
 
     function calculateDistanceSurcharge(eircode){
-      // Dummy: straight-line distance calculation
-      // 53.1136, -7.3189 Mountmellick coords
+      // Placeholder: currently always adds 0 if <=20km, else 10 per 15km over
       if(!eircode) return 0;
-      let distanceKm = 25; // placeholder example, ideally replace with geocode API
-      if(distanceKm <=20) return 0;
+      let distanceKm = 25; // example placeholder
+      if(distanceKm <= 20) return 0;
       return Math.ceil((distanceKm-20)/15)*10;
     }
 
@@ -186,12 +182,10 @@
       const key = serviceSelect.value;
       const qty = Number(document.getElementById('qty').value || 1);
       let basePrice = (PRICES[key]||0)*qty;
-
-      const distanceSurcharge = calculateDistanceSurcharge(custEircode.value);
+      let distanceSurcharge = calculateDistanceSurcharge(custEircode.value);
 
       allServices.push({
         key,
-        title:key,
         qty,
         price: basePrice,
         distanceSurcharge
@@ -206,15 +200,17 @@
       allServices.forEach(s=>{
         const serviceTotal = s.price + s.distanceSurcharge;
         total += serviceTotal;
-        breakdown.innerHTML+=`<div>${s.title} x ${s.qty} => €${serviceTotal}${s.distanceSurcharge>0?` (Distance surcharge €${s.distanceSurcharge})`:''}</div>`;
+        breakdown.innerHTML+=`<div>${s.key} x ${s.qty} => €${serviceTotal}${s.distanceSurcharge>0?` (Distance surcharge €${s.distanceSurcharge})`:''}</div>`;
       });
       liveTotal.textContent=`€${total}`;
     }
 
     addServiceBtn.addEventListener('click', addService);
-    resetBtn.addEventListener('click',()=>{allServices=[];renderDynamicOptions();updateBreakdown();notes.value='';custName.value='';custEmail.value='';custPhone.value='';custEircode.value='';});
+    resetBtn.addEventListener('click', ()=>{
+      allServices=[]; renderDynamicOptions(); updateBreakdown(); notes.value=''; custName.value=''; custEmail.value=''; custPhone.value=''; custEircode.value='';
+    });
 
-    previewBtn.addEventListener('click',()=>{
+    previewBtn.addEventListener('click', ()=>{
       if(allServices.length===0){alert("Add at least one service"); return;}
       const rows = breakdown.innerHTML;
       const total = liveTotal.textContent.replace('€','');
