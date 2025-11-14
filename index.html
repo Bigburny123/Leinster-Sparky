@@ -24,19 +24,25 @@
     .logo{width:72px;height:72px;border-radius:14px;background:linear-gradient(135deg,var(--brand-1),var(--brand-2));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:22px;box-shadow:var(--accent-shadow)}
     h1{margin:0;font-size:22px}
     p.lead{margin:6px 0 20px;color:var(--muted)}
+
     .grid{display:grid;grid-template-columns:1fr;gap:20px}
+
     .card{background:var(--card);padding:18px;border-radius:var(--radius);box-shadow:0 6px 18px rgba(11,18,32,0.04)}
     label{display:block;font-size:13px;color:var(--muted);margin-bottom:8px}
     select,input[type=number],input[type=text],input[type=email],textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #e8f0ed;background:#fff;font-size:15px}
     .row{display:flex;gap:12px}
     .row > *{flex:1}
+
     .summary{margin-top:12px;display:flex;align-items:center;gap:10px}
     .total{font-size:28px;font-weight:900;margin:0}
     .muted{color:var(--muted);font-size:13px}
     button.primary{background:linear-gradient(90deg,var(--brand-1),#1e7f2f);color:#fff;padding:12px 18px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
     button.ghost{background:transparent;border:1px solid #e6eef3;padding:10px 14px;border-radius:10px;cursor:pointer}
+
     .watermark{position:absolute;right:-40px;top:120px;opacity:0.06;font-size:160px;font-weight:900;color:var(--brand-1);transform:rotate(-20deg);pointer-events:none}
+
     .small{font-size:13px;color:var(--muted)}
+    input[disabled]{background:#e8f0ed;}
   </style>
 </head>
 <body>
@@ -62,6 +68,9 @@
             <option value="Lighting">Light fitting or replacement</option>
             <option value="Fuseboard">Fuseboard upgrade</option>
             <option value="Outdoor Socket">Outdoor Socket</option>
+            <option value="Hang a TV">Hang a TV</option>
+            <option value="Xmas Lights (small run)">Xmas Lights (small run)</option>
+            <option value="Xmas Lights (big run)">Xmas Lights (big run)</option>
           </select>
         </div>
 
@@ -78,12 +87,12 @@
 
         <div style="margin-top:12px">
           <label for="custName">Your name</label>
-          <input id="custName" type="text" placeholder="Full name" disabled>
+          <input id="custName" type="text" placeholder="Full name" disabled required>
         </div>
 
         <div style="margin-top:12px">
           <label for="custEmail">Your email</label>
-          <input id="custEmail" type="email" placeholder="you@example.com" disabled>
+          <input id="custEmail" type="email" placeholder="you@example.com" disabled required>
         </div>
 
         <div style="margin-top:12px">
@@ -103,8 +112,7 @@
 
         <div style="margin-top:12px" class="row">
           <button id="addServiceBtn" class="primary">Add to quote</button>
-          <button id="reviewQuoteBtn" class="primary">Review Quote & Enter Details</button>
-          <button id="previewBtn" class="primary" disabled>Send Quote</button>
+          <button id="previewBtn" class="primary">Retrieve My Quote</button>
           <div class="summary">
             <div class="total" id="liveTotal">€0</div>
           </div>
@@ -129,7 +137,6 @@
     const custPhone = document.getElementById('custPhone');
     const custEircode = document.getElementById('custEircode');
     const addServiceBtn = document.getElementById('addServiceBtn');
-    const reviewQuoteBtn = document.getElementById('reviewQuoteBtn');
     const previewBtn = document.getElementById('previewBtn');
     const resetBtn = document.getElementById('resetBtn');
     const liveTotal = document.getElementById('liveTotal');
@@ -139,7 +146,10 @@
       "Socket Installation":30,
       "Lighting":30,
       "Fuseboard":650,
-      "Outdoor Socket":100
+      "Outdoor Socket":100,
+      "Hang a TV":40,
+      "Xmas Lights (small run)":60,
+      "Xmas Lights (big run)":110
     };
 
     let allServices = [];
@@ -157,35 +167,41 @@
       return Math.ceil((distanceKm-20)/15)*10;
     }
 
-    function applyDiscount(total, itemCount){
-      if(itemCount >= 5) return total * 0.85; // 15%
-      if(itemCount >= 3) return total * 0.90; // 10%
-      return total;
-    }
-
     function addService(){
       const key = serviceSelect.value;
       const qty = Number(document.getElementById('qty').value || 1);
-      let basePrice = (PRICES[key]||0)*qty;
-
-      allServices.push({ key, qty, price: basePrice });
+      const basePrice = (PRICES[key]||0)*qty;
+      allServices.push({key, qty, price: basePrice});
       updateBreakdown();
+      // enable customer info fields after at least one service
+      custName.disabled = custEmail.disabled = custPhone.disabled = custEircode.disabled = notes.disabled = false;
     }
 
     function updateBreakdown(){
-      if(allServices.length===0){
-        liveTotal.textContent='€0'; 
-        breakdown.innerHTML='No items selected yet.'; 
-        return;
-      }
-      let total=0;
+      if(allServices.length===0){liveTotal.textContent='€0'; breakdown.innerHTML='No items selected yet.'; return;}
+      let subtotal=0;
       breakdown.innerHTML="";
       allServices.forEach(s=>{
-        total += s.price;
-        breakdown.innerHTML+=`${s.key} x ${s.qty} => €${s.price}<br>`;
+        subtotal += s.price;
+        breakdown.innerHTML+=`${s.key} x ${s.qty} => €${s.price}\n`;
       });
-      let discountedTotal = applyDiscount(total, allServices.length);
-      liveTotal.textContent=`€${discountedTotal.toFixed(2)}`;
+
+      // apply discount
+      let discount = 0;
+      if(allServices.length >=5) discount = 15;
+      else if(allServices.length >=3) discount = 10;
+
+      let discountAmount = subtotal * (discount/100);
+      let total = subtotal - discountAmount;
+
+      // distance surcharge
+      let distanceSurcharge = calculateDistanceSurcharge(custEircode.value);
+      total += distanceSurcharge;
+
+      breakdown.innerHTML += discount>0?`Discount (${discount}%): -€${discountAmount.toFixed(2)}\n`:"";
+      if(distanceSurcharge>0) breakdown.innerHTML += `Distance surcharge: €${distanceSurcharge}\n`;
+
+      liveTotal.textContent=`€${total.toFixed(2)}`;
     }
 
     addServiceBtn.addEventListener('click', addService);
@@ -193,28 +209,21 @@
     resetBtn.addEventListener('click', ()=>{
       allServices=[]; renderDynamicOptions(); updateBreakdown();
       notes.value=''; custName.value=''; custEmail.value=''; custPhone.value=''; custEircode.value='';
-      custName.disabled = true; custEmail.disabled = true; custPhone.disabled = true; custEircode.disabled = true; notes.disabled = true;
-      previewBtn.disabled = true;
-    });
-
-    reviewQuoteBtn.addEventListener('click', ()=>{
-      if(allServices.length===0){ alert("Add at least one service first."); return; }
-
-      custName.disabled = false; custEmail.disabled = false; custPhone.disabled = false; custEircode.disabled = false; notes.disabled = false;
-      previewBtn.disabled = false;
-
-      // calculate distance surcharge
-      let distanceTotal = calculateDistanceSurcharge(custEircode.value);
-      let currentTotal = Number(liveTotal.textContent.replace('€','')) + distanceTotal;
-      liveTotal.textContent = `€${currentTotal.toFixed(2)}`;
-      alert("Now enter your details to receive the quote by email. Distance surcharge added at the end.");
+      custName.disabled = custEmail.disabled = custPhone.disabled = custEircode.disabled = notes.disabled = true;
     });
 
     previewBtn.addEventListener('click', ()=>{
-      if(allServices.length === 0){ alert("Add at least one service"); return; }
-      if(!custEmail.value){ alert("Please enter a valid email"); return; }
+      if(allServices.length === 0){
+        alert("Add at least one service");
+        return;
+      }
 
-      const rows = breakdown.innerHTML;
+      if(!custEmail.value){
+        alert("Please enter a valid email");
+        return;
+      }
+
+      const rows = breakdown.innerHTML.replace(/\n/g,'<br>');
       const total = liveTotal.textContent.replace('€','');
       const templateParams = {
         to_name: custName.value || "Customer",
@@ -231,8 +240,7 @@
       console.log(templateParams);
 
       emailjs.send("service_3mekcch","template_359siqa",templateParams)
-        .then(()=>{ alert("Quote sent successfully!"); },
-              (err)=>{ console.error(err); alert("Failed to send quote, check console."); });
+        .then(()=>{alert("Quote sent successfully!")},(err)=>{console.error(err); alert("Failed to send quote, check console.");});
     });
   </script>
 </body>
