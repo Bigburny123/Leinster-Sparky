@@ -155,8 +155,7 @@
 
     function calculateDistanceSurcharge(eircode){
       if(!eircode) return 0;
-      // Placeholder for real distance calculation from Mountmellick
-      let distanceKm = 25; // example distance, replace with real lookup if needed
+      let distanceKm = 25; // example placeholder
       if(distanceKm <= 20) return 0;
       return Math.ceil((distanceKm-20)/15)*10;
     }
@@ -167,11 +166,17 @@
       let basePrice = (PRICES[key]||0)*qty;
       let distanceSurcharge = calculateDistanceSurcharge(custEircode.value);
 
+      // Discount logic
+      let smallCount = ['Socket Installation','Lighting'].includes(key) ? qty : 0;
+      let discountPct = smallCount >=5 ? 0.15 : smallCount >=3 ? 0.10 : 0;
+      const discountAmount = Math.round(basePrice * discountPct);
+
       allServices.push({
         key,
         qty,
         price: basePrice,
-        distanceSurcharge
+        distanceSurcharge,
+        discount: discountAmount
       });
       updateBreakdown();
     }
@@ -179,13 +184,14 @@
     function updateBreakdown(){
       if(allServices.length===0){liveTotal.textContent='€0'; breakdown.innerHTML='No items selected yet.'; return;}
       let total=0;
-      breakdown.innerHTML="";
-      allServices.forEach(s=>{
-        const serviceTotal = s.price + s.distanceSurcharge;
+      const rows = allServices.map(s=>{
+        const serviceTotal = s.price + s.distanceSurcharge - s.discount;
         total += serviceTotal;
-        breakdown.innerHTML+=`<div>${s.key} x ${s.qty} => €${serviceTotal}${s.distanceSurcharge>0?` (Distance surcharge €${s.distanceSurcharge})`:''}</div>`;
+        return `${s.key} x ${s.qty} => €${serviceTotal}${s.distanceSurcharge>0?` (Distance surcharge €${s.distanceSurcharge})`:''}${s.discount>0?` (Discount €${s.discount})`:''}`;
       });
+      breakdown.innerHTML = rows.join('<br>');
       liveTotal.textContent=`€${total}`;
+      return rows.join('\n'); // for email plain text
     }
 
     addServiceBtn.addEventListener('click', addService);
@@ -200,13 +206,12 @@
         alert("Add at least one service");
         return;
       }
-
       if(!custEmail.value){
         alert("Please enter a valid email");
         return;
       }
 
-      const rows = breakdown.innerHTML;
+      const rows = updateBreakdown();
       const total = liveTotal.textContent.replace('€','');
       const templateParams = {
         to_name: custName.value || "Customer",
@@ -226,7 +231,7 @@
         .then(()=>{
           alert("Quote sent successfully!");
         },(err)=>{
-          console.error(err);
+          console.error(err); 
           alert("Failed to send quote, check console.");
         });
     });
