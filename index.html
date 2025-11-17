@@ -42,6 +42,20 @@
     .watermark{position:absolute;right:-40px;top:120px;opacity:0.06;font-size:160px;font-weight:900;color:var(--brand-1);transform:rotate(-20deg);pointer-events:none}
 
     .small{font-size:13px;color:var(--muted)}
+
+    /* Modal styles */
+    .modal-overlay{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(7,18,26,0.45);display:none;align-items:center;justify-content:center;z-index:2000;padding:20px}
+    .modal{background:#fff;border-radius:12px;max-width:760px;width:100%;box-shadow:0 30px 80px rgba(7,18,26,0.25);padding:18px;max-height:90vh;overflow:auto}
+    .modal-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .modal-body{margin-top:12px}
+    .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
+    .item-line{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px dashed #eef3ee}
+    .item-left{flex:1}
+    .item-right{min-width:120px;text-align:right;font-weight:700}
+    .muted-small{color:var(--muted);font-size:13px}
+    .badge{display:inline-block;padding:6px 10px;border-radius:8px;background:#f6fbf7;border:1px solid #e8f5ea;font-weight:700}
+    .total-row{display:flex;justify-content:space-between;align-items:center;padding-top:10px}
+    @media (max-width:600px){ .row{flex-direction:column} .item-right{min-width:90px} }
   </style>
 </head>
 <body>
@@ -85,25 +99,7 @@
           </select>
         </div>
 
-        <div style="margin-top:12px">
-          <label for="custName">Your name</label>
-          <input id="custName" type="text" placeholder="Full name" required>
-        </div>
-
-        <div style="margin-top:12px">
-          <label for="custEmail">Your email</label>
-          <input id="custEmail" type="email" placeholder="you@example.com" required>
-        </div>
-
-        <div style="margin-top:12px">
-          <label for="custPhone">Phone</label>
-          <input id="custPhone" type="text" placeholder="(optional)">
-        </div>
-
-        <div style="margin-top:12px">
-          <label for="custEircode">Eircode</label>
-          <input id="custEircode" type="text" placeholder="e.g. R32X4E1">
-        </div>
+        <!-- Note: customer fields moved to modal. Keep placeholder inputs removed here. -->
 
         <div style="margin-top:12px">
           <label for="notes">Notes / custom description</label>
@@ -114,7 +110,7 @@
           <button id="addServiceBtn" class="primary">Add to quote</button>
           <button id="previewBtn" class="primary">Retrieve My Quote</button>
           <div class="summary">
-            <div class="total" id="liveTotal">€0</div>
+            <div class="total" id="liveTotal">€0.00</div>
           </div>
           <button id="resetBtn" class="ghost">Reset</button>
         </div>
@@ -122,6 +118,71 @@
         <div style="margin-top:12px" id="breakdown" class="small muted">No items selected yet.</div>
       </section>
     </main>
+  </div>
+
+  <!-- Modal (B2: shows quote + fields) -->
+  <div id="quoteModal" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal" role="document">
+      <div class="modal-header">
+        <div>
+          <strong style="font-size:18px">Your quote summary</strong>
+          <div class="muted-small">Review your items and enter your details to send the quote</div>
+        </div>
+        <button id="closeModal" class="ghost">Close</button>
+      </div>
+
+      <div class="modal-body">
+        <div id="modalBreakdown" style="margin-top:12px"></div>
+
+        <div style="margin-top:12px" class="total-row">
+          <div class="muted-small">Subtotal (discounts applied)</div>
+          <div id="modalSubtotal" style="font-weight:900">€0.00</div>
+        </div>
+
+        <hr style="margin:12px 0">
+
+        <div>
+          <label for="modalName">Your name</label>
+          <input id="modalName" type="text" placeholder="Full name" required>
+        </div>
+
+        <div style="margin-top:12px">
+          <label for="modalEmail">Your email</label>
+          <input id="modalEmail" type="email" placeholder="you@example.com" required>
+        </div>
+
+        <div style="margin-top:12px" class="row">
+          <div>
+            <label for="modalPhone">Phone</label>
+            <input id="modalPhone" type="text" placeholder="(optional)">
+          </div>
+          <div>
+            <label for="modalEircode">Eircode</label>
+            <input id="modalEircode" type="text" placeholder="e.g. R32X4E1">
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <label for="modalNotes">Notes (optional)</label>
+          <textarea id="modalNotes" rows="2" placeholder="Any additional notes"></textarea>
+        </div>
+
+        <div style="margin-top:12px" class="total-row">
+          <div class="muted-small">Distance surcharge</div>
+          <div id="modalSurcharge" style="font-weight:700">€0.00</div>
+        </div>
+
+        <div style="margin-top:8px" class="total-row">
+          <div style="font-size:15px">Final total</div>
+          <div id="modalFinalTotal" style="font-size:18px;font-weight:900">€0.00</div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="sendQuoteBtn" class="primary">Send My Quote</button>
+        <button id="cancelModal" class="ghost">Cancel</button>
+      </div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
@@ -132,15 +193,26 @@
     const dynamicOptions = document.getElementById('dynamicOptions');
     const propertyType = document.getElementById('propertyType');
     const notes = document.getElementById('notes');
-    const custName = document.getElementById('custName');
-    const custEmail = document.getElementById('custEmail');
-    const custPhone = document.getElementById('custPhone');
-    const custEircode = document.getElementById('custEircode');
     const addServiceBtn = document.getElementById('addServiceBtn');
     const previewBtn = document.getElementById('previewBtn');
     const resetBtn = document.getElementById('resetBtn');
     const liveTotal = document.getElementById('liveTotal');
     const breakdown = document.getElementById('breakdown');
+
+    // Modal elements
+    const quoteModal = document.getElementById('quoteModal');
+    const closeModal = document.getElementById('closeModal');
+    const cancelModal = document.getElementById('cancelModal');
+    const modalBreakdown = document.getElementById('modalBreakdown');
+    const modalSubtotal = document.getElementById('modalSubtotal');
+    const modalSurcharge = document.getElementById('modalSurcharge');
+    const modalFinalTotal = document.getElementById('modalFinalTotal');
+    const modalName = document.getElementById('modalName');
+    const modalEmail = document.getElementById('modalEmail');
+    const modalPhone = document.getElementById('modalPhone');
+    const modalEircode = document.getElementById('modalEircode');
+    const modalNotes = document.getElementById('modalNotes');
+    const sendQuoteBtn = document.getElementById('sendQuoteBtn');
 
     const PRICES = {
       "Socket Replacement": 30,
@@ -161,97 +233,188 @@
     serviceSelect.addEventListener('change', renderDynamicOptions);
     renderDynamicOptions();
 
+    // Discount function (change thresholds here)
+    function calculateDiscount(qty, basePrice) {
+      // Apply 10% for ≥ 4 items
+      if (qty >= 4 && qty < 6) {
+        return basePrice * 0.10;
+      }
+      // Apply 15% for ≥ 6 items
+      if (qty >= 6) {
+        return basePrice * 0.15;
+      }
+      return 0;
+    }
+
+    // Placeholder distance calculation: replace with real lookup if desired.
     function calculateDistanceSurcharge(eircode){
       if(!eircode) return 0;
-      let distanceKm = 25; // placeholder
+      // For now: simple placeholder: if eircode non-empty, compute some pseudo-distance-based value
+      // In your previous code you used a fixed 'distanceKm' placeholder. Here we'll simulate:
+      // (This is intentionally simple — you can plug in a real service later.)
+      // Example logic: treat the last digit of the eircode as a proxy => convert to number
+      const lastChar = eircode.trim().slice(-1);
+      const digit = parseInt(lastChar, 10);
+      let distanceKm = isNaN(digit) ? 15 : (10 + (digit % 9) * 5); // between 10 and 50-ish
       if(distanceKm <= 20) return 0;
       return Math.ceil((distanceKm-20)/15)*10;
     }
-    function calculateDiscount(qty, basePrice) {
-  // Apply 10% for ≥ 4 items
-  if (qty >= 4 && qty < 6) {
-    return basePrice * 0.10; 
-  }
-  // Apply 15% for ≥ 6 items
-  if (qty >= 6) {
-    return basePrice * 0.15;
-  }
-  return 0; // No discount
-}
 
     function addService(){
       const key = serviceSelect.value;
       const qty = Number(document.getElementById('qty').value || 1);
-      let basePrice = (PRICES[key] || 0) * qty;
-let discount = calculateDiscount(qty, basePrice);
-let distanceSurcharge = calculateDistanceSurcharge(custEircode.value);
+      const basePrice = (PRICES[key] || 0) * qty;
+      const discount = calculateDiscount(qty, basePrice);
 
-allServices.push({
-  key,
-  qty,
-  price: basePrice,
-  discount,
-  distanceSurcharge
-});
+      // distance surcharge NOT calculated here — only at final step
+      allServices.push({
+        key,
+        qty,
+        price: basePrice,
+        discount
+      });
       updateBreakdown();
     }
 
     function updateBreakdown(){
-      if(allServices.length===0){liveTotal.textContent='€0'; breakdown.innerHTML='No items selected yet.'; return;}
-      let total=0;
-      breakdown.innerHTML="";
-      allServices.forEach(s=>{
-        const serviceTotal = (s.price - s.discount) + s.distanceSurcharge;
+      if(allServices.length === 0){
+        liveTotal.textContent = '€0.00';
+        breakdown.innerHTML = 'No items selected yet.';
+        return;
+      }
+      let total = 0;
+      breakdown.innerHTML = "";
+      allServices.forEach((s, i) => {
+        const serviceTotal = (s.price - s.discount);
         total += serviceTotal;
-        breakdown.innerHTML += `${s.key} x ${s.qty} => €${serviceTotal.toFixed(2)}${s.discount > 0 ? 
-  ` (Discount -€${s.discount.toFixed(2)})` : ''}${s.distanceSurcharge > 0 ? 
-  ` (Distance surcharge €${s.distanceSurcharge})` : ''}<br>`;
+        breakdown.innerHTML += `<div class="item-line"><div class="item-left">${s.key} x ${s.qty} <div class="muted-small">${s.discount > 0 ? `Discount -€${s.discount.toFixed(2)}` : ''}</div></div><div class="item-right">€${serviceTotal.toFixed(2)}</div></div>`;
       });
-      liveTotal.textContent=`€${total}`;
+      liveTotal.textContent = `€${total.toFixed(2)}`;
     }
 
     addServiceBtn.addEventListener('click', addService);
 
     resetBtn.addEventListener('click', ()=>{
-      allServices=[]; renderDynamicOptions(); updateBreakdown();
-      notes.value=''; custName.value=''; custEmail.value=''; custPhone.value=''; custEircode.value='';
+      allServices = [];
+      renderDynamicOptions();
+      updateBreakdown();
+      notes.value = '';
+      // modal fields cleared as well
+      modalName.value = '';
+      modalEmail.value = '';
+      modalPhone.value = '';
+      modalEircode.value = '';
+      modalNotes.value = '';
+      modalSurcharge.textContent = '€0.00';
+      modalFinalTotal.textContent = '€0.00';
+      modalSubtotal.textContent = '€0.00';
+      liveTotal.textContent = '€0.00';
     });
 
-    previewBtn.addEventListener('click', ()=>{
+    // Modal control
+    function openModal(){
+      // populate modal breakdown with current items (no surcharge)
       if(allServices.length === 0){
         alert("Add at least one service");
         return;
       }
+      renderModalBreakdown();
+      quoteModal.style.display = 'flex';
+      // focus on name
+      setTimeout(()=> modalName.focus(), 150);
+    }
+    function closeModalNow(){
+      quoteModal.style.display = 'none';
+    }
+    previewBtn.addEventListener('click', openModal);
+    closeModal.addEventListener('click', closeModalNow);
+    cancelModal.addEventListener('click', closeModalNow);
+    quoteModal.addEventListener('click', (e)=>{
+      if(e.target === quoteModal) closeModalNow();
+    });
 
-      if(!custEmail.value){
-        alert("Please enter a valid email");
+    function renderModalBreakdown(){
+      let subtotal = 0;
+      modalBreakdown.innerHTML = '';
+      allServices.forEach((s)=>{
+        const serviceTotal = (s.price - s.discount);
+        subtotal += serviceTotal;
+        modalBreakdown.innerHTML += `<div class="item-line"><div class="item-left">${s.key} x ${s.qty} <div class="muted-small">${s.discount > 0 ? `Discount -€${s.discount.toFixed(2)}` : ''}</div></div><div class="item-right">€${serviceTotal.toFixed(2)}</div></div>`;
+      });
+      modalSubtotal.textContent = `€${subtotal.toFixed(2)}`;
+      modalSurcharge.textContent = '€0.00';
+      modalFinalTotal.textContent = `€${subtotal.toFixed(2)}`;
+      // Also copy notes to modalNotes if empty
+      if(!modalNotes.value) modalNotes.value = notes.value || '';
+    }
+
+    // When sending: compute surcharge once (Option 1)
+    sendQuoteBtn.addEventListener('click', ()=>{
+      const name = modalName.value.trim();
+      const email = modalEmail.value.trim();
+      const phone = modalPhone.value.trim();
+      const eircode = modalEircode.value.trim();
+      const finalNotes = modalNotes.value.trim();
+      if(!email){
+        alert("Please enter a valid email address.");
         return;
       }
+      if(!name){
+        if(!confirm("No name entered. Send without name?")) return;
+      }
 
-      const rows = breakdown.innerHTML;
-      const total = liveTotal.textContent.replace('€','');
+      // compute subtotal
+      let subtotal = 0;
+      allServices.forEach(s => subtotal += (s.price - s.discount));
+
+      const surcharge = calculateDistanceSurcharge(eircode); // single surcharge applied once
+      const finalTotal = subtotal + surcharge;
+
+      // update modal with computed values so user sees final numbers before send
+      modalSurcharge.textContent = `€${surcharge.toFixed(2)}`;
+      modalFinalTotal.textContent = `€${finalTotal.toFixed(2)}`;
+
+      // Build items HTML for email (same as modalBreakdown innerHTML but in a single string)
+      let itemsHtml = '';
+      allServices.forEach(s => {
+        const serviceTotal = (s.price - s.discount);
+        itemsHtml += `<div style="margin-bottom:6px;"><strong>${s.key} x ${s.qty}</strong> — €${serviceTotal.toFixed(2)}${s.discount>0?` <span style="color:#666"> (Discount -€${s.discount.toFixed(2)})</span>`:''}</div>`;
+      });
+      itemsHtml += `<div style="margin-top:10px;"><strong>Subtotal: €${subtotal.toFixed(2)}</strong></div>`;
+      itemsHtml += `<div><strong>Distance surcharge: €${surcharge.toFixed(2)}</strong></div>`;
+      itemsHtml += `<div style="margin-top:6px;font-size:16px"><strong>Final total: €${finalTotal.toFixed(2)}</strong></div>`;
+
       const templateParams = {
-        to_name: custName.value || "Customer",
-        to_email: custEmail.value,
+        to_name: name || "Customer",
+        to_email: email,
         owner_email: "ryanbyrne1412@gmail.com",
-        items_html: rows,
-        total: total,
-        phone: custPhone.value,
-        eircode: custEircode.value,
+        items_html: itemsHtml,
+        total: finalTotal.toFixed(2),
+        phone: phone,
+        eircode: eircode,
         property_type: propertyType.value,
-        notes: notes.value
+        notes: finalNotes
       };
 
-      console.log(templateParams);
-
+      // Send email
+      sendQuoteBtn.disabled = true;
+      sendQuoteBtn.textContent = 'Sending...';
       emailjs.send("service_3mekcch","template_359siqa",templateParams)
         .then(()=>{
           alert("Quote sent successfully!");
+          sendQuoteBtn.disabled = false;
+          sendQuoteBtn.textContent = 'Send My Quote';
+          closeModalNow();
         },(err)=>{
           console.error(err);
           alert("Failed to send quote, check console.");
+          sendQuoteBtn.disabled = false;
+          sendQuoteBtn.textContent = 'Send My Quote';
         });
     });
+
+    // initial render
+    updateBreakdown();
   </script>
 </body>
 </html>
