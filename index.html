@@ -167,19 +167,32 @@
       if(distanceKm <= 20) return 0;
       return Math.ceil((distanceKm-20)/15)*10;
     }
+    function calculateDiscount(qty, basePrice) {
+  // Apply 10% for ≥ 4 items
+  if (qty >= 4 && qty < 6) {
+    return basePrice * 0.10; 
+  }
+  // Apply 15% for ≥ 6 items
+  if (qty >= 6) {
+    return basePrice * 0.15;
+  }
+  return 0; // No discount
+}
 
     function addService(){
       const key = serviceSelect.value;
       const qty = Number(document.getElementById('qty').value || 1);
-      let basePrice = (PRICES[key]||0)*qty;
-      let distanceSurcharge = calculateDistanceSurcharge(custEircode.value);
+      let basePrice = (PRICES[key] || 0) * qty;
+let discount = calculateDiscount(qty, basePrice);
+let distanceSurcharge = calculateDistanceSurcharge(custEircode.value);
 
-      allServices.push({
-        key,
-        qty,
-        price: basePrice,
-        distanceSurcharge
-      });
+allServices.push({
+  key,
+  qty,
+  price: basePrice,
+  discount,
+  distanceSurcharge
+});
       updateBreakdown();
     }
 
@@ -188,9 +201,11 @@
       let total=0;
       breakdown.innerHTML="";
       allServices.forEach(s=>{
-        const serviceTotal = s.price + s.distanceSurcharge;
+        const serviceTotal = (s.price - s.discount) + s.distanceSurcharge;
         total += serviceTotal;
-        breakdown.innerHTML+=`${s.key} x ${s.qty} => €${serviceTotal}${s.distanceSurcharge>0?` (Distance surcharge €${s.distanceSurcharge})`:''}<br>`;
+        breakdown.innerHTML += `${s.key} x ${s.qty} => €${serviceTotal.toFixed(2)}${s.discount > 0 ? 
+  ` (Discount -€${s.discount.toFixed(2)})` : ''}${s.distanceSurcharge > 0 ? 
+  ` (Distance surcharge €${s.distanceSurcharge})` : ''}<br>`;
       });
       liveTotal.textContent=`€${total}`;
     }
